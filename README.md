@@ -40,6 +40,7 @@ Code finds assets by name, so these must be followed:
 - Character models: `ReplicatedStorage.Assets.Characters.<Name>`, with a `HumanoidRootPart` and hitbox attachments named `Hitbox_<Part>` (e.g. `Hitbox_RightHand`).
 - **Never put anything inside `ReplicatedStorage.Shared`** — Rojo owns it and deletes anything not in `src/shared`. Studio-built content goes in `ReplicatedStorage.Assets`, which Rojo creates but leaves alone.
 - Animation IDs live in code (the character's data file), not in the model.
+- Stages are played on the plane **Z = 0**. Tag stage parts (Tag Editor, or Properties → Tags) so the movement code can collide with them: `StageSolid` for solid ground and walls, `StagePlatform` for pass-through platforms, and `StageSpawn` on one invisible, non-colliding part where fighters appear. Keep parts unrotated (or rotated in 90° steps). If a place has no `StageSolid` parts, the server builds a grey test stage.
 
 ## Layout
 
@@ -47,8 +48,11 @@ Code finds assets by name, so these must be followed:
 |---|---|---|
 | `src/shared` | `ReplicatedStorage.Shared` | Modules used by both server and client (utilities, data) |
 | `src/shared/Characters` | `ReplicatedStorage.Shared.Characters` | One data file per character: stats, animation IDs, moves. Copy `_Template.luau` to add one |
-| `src/server` | `ServerScriptService.Server` | Server logic: damage, knockback, hitboxes, stocks, match flow |
-| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects |
+| `src/shared/Movement` | `ReplicatedStorage.Shared.Movement` | Pure 2D movement rules (run, jumps, short hop, double jump, fast-fall, landing lag, pass-through platforms) and their tuning in `Config.luau` |
+| `src/shared/Stage` | `ReplicatedStorage.Shared.Stage` | `StageGeometry`: reads tagged stage parts into the rects movement collides with |
+| `src/server` | `ServerScriptService.Server` | Server logic: damage, knockback, hitboxes, stocks, match flow. `TestStage/` builds a test stage when the place has none |
+| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects. `Input/` turns keyboard, controller and touch into one intent per frame; `Fighter/` drives your character with the movement rules at 60 Hz; `Camera/` is the side-on follow camera |
+| `tests/` | — (not synced) | Unit tests for the pure modules, run outside Studio (see Setup) |
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
 | `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, settled team decisions (marked DECIDED), build order |
@@ -66,6 +70,16 @@ Code finds assets by name, so these must be followed:
    ```
 
 4. Open a **local copy** of the place (open the Team Create place, then **File → Save to File** — `.rbxl` files are gitignored). Open the **Rojo** plugin tab and click **Connect**. Edits to files in `src/` now sync live into your copy for testing.
+
+5. Press **Play** in Studio to try the movement: WASD or arrow keys and Space, a controller (stick or D-pad, A or Y to jump), or the on-screen joystick and Jump button on touch. Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it.
+
+**Unit tests.** Game rules live in pure modules (no Instances), so they run in plain [Luau](https://github.com/luau-lang/luau/releases) without Studio. Put the `luau` binary on your PATH and run, from the repo folder:
+
+```bash
+luau tests/run.luau
+```
+
+Add new test files to the list in `tests/run.luau`.
 
 Artists and builders don't need any of this — just open the shared place in Studio.
 

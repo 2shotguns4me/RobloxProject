@@ -38,10 +38,21 @@
     },
 
     "StarterPlayer": {
+      "$properties": {
+        "DevComputerMovementMode": "Scriptable",
+        "DevTouchMovementMode": "Scriptable"
+      },
+
       "StarterPlayerScripts": {
         "Client": {
           "$path": "src/client"
         }
+      }
+    },
+
+    "StarterGui": {
+      "$properties": {
+        "ScreenOrientation": "LandscapeSensor"
       }
     },
 
