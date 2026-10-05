@@ -1,8 +1,8 @@
 --!strict
 --[[
-	The training dummy's look: an orange block the size of a fighter's body, with a damage %
-	label. LocalFighter simulates it like any fighter (it just never presses anything).
-	Client-only: everyone gets their own dummy.
+	The training opponent's look: an orange block the size of a fighter's body, with a damage %
+	label. LocalFighter simulates it like any fighter, driven by the bot or standing still
+	(Training/Config.Opponent). Client-only: everyone gets their own.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -48,10 +48,6 @@ function TrainingDummy.render(view: View, f: Fighter.State, bodyHeight: number, 
 	local position = Vector3.new(f.Body.X, f.Body.Y + bodyHeight / 2, StageGeometry.PlaneZ)
 	view.Body.CFrame = CFrame.new(position + offset)
 	PercentLabel.set(view.Label, f.Percent)
-end
-
-function TrainingDummy.centre(f: Fighter.State, bodyHeight: number): Vector3
-	return Vector3.new(f.Body.X, f.Body.Y + bodyHeight / 2, StageGeometry.PlaneZ)
 end
 
 return TrainingDummy

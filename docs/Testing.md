@@ -40,7 +40,7 @@ On your PC, in **VS Code opened on the local folder** (`File → Open Folder…`
    Leave `rojo serve` running.
 2. **Open a local copy of the place** in Studio: a `.rbxl` you saved with **File → Save to File** (gitignored), or a blank Baseplate. Never sync into the shared Team Create place unless you're the one person doing that (see the README's Workflow).
 3. **Connect Rojo while stopped (Edit mode):** **Plugins → Rojo → Connect**. It shows `RobloxProject · localhost:34872`.
-4. **Press Play** (F5). The server builds the grey test stage and you spawn next to the orange training dummy.
+4. **Press Play** (F5). The server builds the grey test stage and you spawn next to the orange bot opponent.
 5. **Check the list below**, and keep **View → Output** open for red errors.
 6. **Finish:** **Stop** (Shift+F5) → **Disconnect** in the Rojo panel → **Ctrl+C** in the `rojo serve` terminal. Don't save `test.rbxl`/your local copy just to keep scripts; Rojo refills them on the next connect.
 
@@ -52,13 +52,31 @@ Controls are in the README's Setup section.
 
 - [ ] **No red errors** in Output from our scripts (`Client`, `Server`, `Shared`).
 - [ ] **Movement:** run, walk (partial stick), full hop vs short hop (tap), double jump, fast-fall (press down after the apex), land on and drop through thin platforms, walls and ceilings stop you.
-- [ ] **Combat:** jab (J), tilt (A/D + J), smash (L), neutral air (J in the air). Each hit raises the dummy's % once, freezes both of you briefly (hitstop), shakes and sparks. A smash at ~95% from mid-stage KOs; the dummy respawns.
-- [ ] **Camera** keeps you and the dummy in frame.
+- [ ] **Combat:** jab (J), tilt (A/D + J), smash (L), neutral air (J in the air). Each hit raises the opponent's % once, freezes both of you briefly (hitstop), shakes and sparks. A smash at ~95% from mid-stage KOs; the opponent respawns.
+- [ ] **Shield:** hold Shift: a blue bubble appears, shrinks and goes red while held; you can't walk but can jump out. Attacks on it add no % and push you back a little. Held until empty, it breaks: you're stuck for ~2 s. Let go: a moment's delay before you can act.
+- [ ] **Dodges:** Shift + S spot dodges, Shift + A/D rolls that way, Shift in the air air-dodges (once until you land). You go see-through for part of each, and attacks pass through you then.
+- [ ] **DI:** get launched by a smash while holding a direction at right angles to the launch (e.g. down if flying up-right): you fly noticeably lower than without.
+- [ ] **Bot:** walks to you, attacks (and its hits raise *your* % and launch you), smashes once you're damaged, double-jumps back when knocked off, and doesn't run off the edge after you. For exact %/KO checks, set `Opponent = "Dummy"` in `src/client/Training/Config.luau` so it stands still.
+- [ ] **Camera** keeps you and the opponent in frame.
 - [ ] **Falling off** the stage KOs you and respawns you.
 - [ ] **Chat:** typing (W, A, S, D, J, L) doesn't move or attack.
 - [ ] **Reset** (Esc → Reset Character): you can still move and attack.
 - [ ] **Controller** if you have one: stick/D-pad, A or Y jump, X attack, right-stick flick smash.
 - [ ] **Touch:** **Test → Device** → pick a phone, then Play: joystick on the left half, Jump and Attack buttons, swipe off Attack to smash.
+
+### Two players (multiplayer)
+
+Test multiplayer changes with a local server and two players, all in Studio on one PC:
+
+1. Rojo connected as usual (Edit mode).
+2. **Test** tab → **Clients and Servers** → set **2** players → **Start**. Studio opens a server window and one window per player.
+3. Fight in the player windows. Check:
+   - [ ] Each player sees the other move smoothly, with a % label above them.
+   - [ ] Your hits on the other player show straight away, and their % goes up in **both** windows.
+   - [ ] Getting hit raises your % and launches you; a smash at high % KOs, and the KO burst shows for both.
+   - [ ] The orange bot is gone while two players are in, and comes back when one leaves.
+   - [ ] The **server** window's Output shows no errors. In Studio it also prints `rejected hit from …` when it turns down a hit claim; a few around lag spikes are fine, a rejection for every hit is a bug.
+4. **Cleanup** (Test tab) closes all the windows.
 
 The Feel harness previews hit effects on two placeholder blocks: add a boolean Workspace attribute `FeelHarness` = true, Play, then keys 1–9.
 
@@ -105,9 +123,13 @@ Give Claude (or a teammate) something it can act on:
   |---|---|
   | Running too fast/slow, jumps too high/floaty, falls too slow | `src/shared/Movement/Config.luau` |
   | Hits send too far/not far enough, KO too early/late, too much stun | `src/shared/Combat/Config.luau` |
+  | Shield too strong/weak, dodges too long/short, DI too strong/weak | `Defense` in `src/shared/Combat/Config.luau` |
+  | Shield bubble size/colour, how see-through dodges look | `src/client/Fighter/Config.luau` |
   | An attack is too slow/fast or too strong/weak, hitbox too big/small | `src/shared/Combat/TestMoveset.luau` (later each fighter's data file) |
   | Hit freeze, shake, sparks, sound, rumble | `src/shared/Feel/HitTiers.luau`, `src/client/Feel/Config.luau` |
   | Camera too close/far, too slow to follow | `src/client/Camera/Config.luau` |
+  | Bot too easy/hard, too twitchy, smashes too much | `src/shared/Bot/Config.luau` |
+  | Online: other players look jittery or late, fair hits rejected | `src/shared/Net/Config.luau` |
   | Touch buttons too small, in the wrong place | `src/client/Input/Config.luau` |
 
 - **Screenshots** help with anything visual. **Screen recordings:** keep them short (5–15 s, one problem each) and say the timestamp; Claude can only look at extracted still frames, so describe anything about timing or feel in words too.
