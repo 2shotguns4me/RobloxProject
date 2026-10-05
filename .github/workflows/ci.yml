@@ -1,0 +1,31 @@
+# Format check, lint, unit tests and a Rojo build on every push and pull request.
+# Tool versions come from rokit.toml, so CI and local machines run the same versions.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install tools (rokit.toml)
+        uses: CompeyDev/setup-rokit@v0.2.1
+
+      - name: Format (StyLua)
+        run: stylua --check src tests
+
+      - name: Lint (selene)
+        run: selene src tests
+
+      - name: Unit tests (Lune)
+        run: lune run tests/run
+
+      - name: Build place (Rojo)
+        run: rojo build -o build.rbxl
