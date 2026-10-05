@@ -12,8 +12,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local Movement = require(ReplicatedStorage.Shared.Movement.Movement)
-local Config = require(script.Parent.Config)
+local Movement = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Movement"):WaitForChild("Movement"))
+local Config = require("./Config")
 
 local InputController = {}
 

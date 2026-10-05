@@ -11,18 +11,19 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Movement = require(ReplicatedStorage.Shared.Movement.Movement)
-local MovementConfig = require(ReplicatedStorage.Shared.Movement.Config)
-local StageGeometry = require(ReplicatedStorage.Shared.Stage.StageGeometry)
-local InputController = require(script.Parent.Parent.Input.InputController)
-local Config = require(script.Parent.Config)
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Movement = require(Shared:WaitForChild("Movement"):WaitForChild("Movement"))
+local MovementConfig = require(Shared:WaitForChild("Movement"):WaitForChild("Config"))
+local StageGeometry = require(Shared:WaitForChild("Stage"):WaitForChild("StageGeometry"))
+local InputController = require("../Input/InputController")
+local Config = require("./Config")
 
 local FRAME = 1 / 60
 
 local LocalFighter = {}
 
 local activeCharacter: Model? = nil
-local focusState: Movement.State? = nil -- the active character's state, for the camera
+local focusCallbacks: { (Vector3?) -> () } = {}
 local stage: Movement.Stage = { Solids = {}, Platforms = {} }
 local stageDirty = true
 
@@ -55,7 +56,6 @@ local function onCharacter(character: Model)
 	local x, y = spawnPoint()
 	local s = Movement.new(MovementConfig, x, y)
 	activeCharacter = character
-	focusState = s
 	InputController.clearPresses()
 	local accumulator = 0
 
@@ -65,7 +65,9 @@ local function onCharacter(character: Model)
 			connection:Disconnect()
 			if activeCharacter == character then
 				activeCharacter = nil
-				focusState = nil
+				for _, callback in focusCallbacks do
+					callback(nil)
+				end
 			end
 			return
 		end
@@ -89,22 +91,20 @@ local function onCharacter(character: Model)
 		if s.Y < spawnY - Config.FallRespawnDepth then
 			s = Movement.new(MovementConfig, spawnX, spawnY)
 		end
-		focusState = s
-
 		local position = Vector3.new(s.X, s.Y + rootOffset(humanoid, root), StageGeometry.PlaneZ)
+		for _, callback in focusCallbacks do
+			callback(position)
+		end
 		root.CFrame = CFrame.lookAt(position, position + Vector3.new(s.Facing, 0, 0))
 		root.AssemblyLinearVelocity = Vector3.zero
 		root.AssemblyAngularVelocity = Vector3.zero
 	end)
 end
 
--- The fighter's feet in world space, for the camera.
-function LocalFighter.getFocus(): Vector3?
-	local s = focusState
-	if s then
-		return Vector3.new(s.X, s.Y, StageGeometry.PlaneZ)
-	end
-	return nil
+-- Called every frame with the fighter's root position (for the camera), or nil once the
+-- character is gone.
+function LocalFighter.onFocusChanged(callback: (Vector3?) -> ())
+	table.insert(focusCallbacks, callback)
 end
 
 function LocalFighter.start()

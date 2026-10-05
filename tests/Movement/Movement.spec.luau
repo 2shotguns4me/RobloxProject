@@ -1,8 +1,8 @@
 --!strict
--- Unit tests for src/shared/Movement. Run with: luau tests/run.luau
+-- Unit tests for src/shared/Movement. Run with: lune run tests/run Movement
 
-local Movement = require("../src/shared/Movement/Movement")
-local Config = require("../src/shared/Movement/Config")
+local Movement = require("../../src/shared/Movement/Movement")
+local Config = require("../../src/shared/Movement/Config")
 
 type State = Movement.State
 type Intent = Movement.Intent
@@ -68,26 +68,26 @@ local tests: { [string]: () -> () } = {}
 tests["falls and lands on the floor"] = function()
 	local s = grounded()
 	assert(s.Y == 0, "feet should rest on the floor top")
-	assert(s.VY == 0)
-	assert(s.AirJumpsLeft == config.AirJumps)
+	assert(s.VY == 0, "expected s.VY == 0")
+	assert(s.AirJumpsLeft == config.AirJumps, "expected s.AirJumpsLeft == config.AirJumps")
 end
 
 tests["runs right at run speed and faces right"] = function()
 	local s = run(grounded(), 60, intent({ MoveX = 1 }))
 	assert(near(s.VX, config.RunSpeed, 1e-9), "VX = " .. s.VX)
-	assert(s.Facing == 1)
+	assert(s.Facing == 1, "expected s.Facing == 1")
 end
 
 tests["walks when the stick is only partly tilted"] = function()
 	local s = run(grounded(), 60, intent({ MoveX = -0.5 }))
 	assert(near(s.VX, -config.WalkSpeed, 1e-9), "VX = " .. s.VX)
-	assert(s.Facing == -1)
+	assert(s.Facing == -1, "expected s.Facing == -1")
 end
 
 tests["friction stops the fighter when the stick is let go"] = function()
 	local s = run(grounded(), 60, intent({ MoveX = 1 }))
 	s = run(s, 60)
-	assert(s.VX == 0)
+	assert(s.VX == 0, "expected s.VX == 0")
 end
 
 tests["jump squat lasts JumpSquat frames before leaving the ground"] = function()
@@ -113,8 +113,11 @@ tests["double jump works once, then air jumps run out"] = function()
 	local s = jump(grounded(), config.JumpSquat + 1)
 	s = run(s, 10)
 	s = Movement.step(s, intent({ JumpPressed = true, JumpHeld = true }), config, stage)
-	assert(s.AirJumpsLeft == 0)
-	assert(near(s.VY, Movement.jumpVelocity(config, config.DoubleJumpHeight), 1e-9))
+	assert(s.AirJumpsLeft == 0, "expected s.AirJumpsLeft == 0")
+	assert(
+		near(s.VY, Movement.jumpVelocity(config, config.DoubleJumpHeight), 1e-9),
+		"double jump should launch at DoubleJumpHeight speed"
+	)
 	s = run(s, 5)
 	local before = s.VY
 	s = Movement.step(s, intent({ JumpPressed = true, JumpHeld = true }), config, stage)
@@ -126,8 +129,8 @@ tests["landing restores air jumps after landing lag"] = function()
 	s = run(s, 10)
 	s = Movement.step(s, intent({ JumpPressed = true }), config, stage)
 	s = run(s, 200)
-	assert(s.Mode == "Ground")
-	assert(s.AirJumpsLeft == config.AirJumps)
+	assert(s.Mode == "Ground", "expected s.Mode == 'Ground'")
+	assert(s.AirJumpsLeft == config.AirJumps, "expected s.AirJumpsLeft == config.AirJumps")
 end
 
 tests["landing lag lasts LandingLag frames"] = function()
@@ -158,14 +161,14 @@ tests["a jump pressed too early is dropped"] = function()
 	s.AirJumpsLeft = 0
 	s = Movement.step(s, intent({ JumpPressed = true }), config, stage)
 	s = run(s, 200)
-	assert(s.Mode == "Ground")
+	assert(s.Mode == "Ground", "expected s.Mode == 'Ground'")
 end
 
 tests["fast-fall needs a down press after the apex"] = function()
 	local s = Movement.new(config, 50, 30)
 	s = Movement.step(s, intent({ MoveY = -1 }), config, stage)
-	assert(s.FastFalling)
-	assert(s.VY == -config.FastFallSpeed)
+	assert(s.FastFalling, "expected s.FastFalling")
+	assert(s.VY == -config.FastFallSpeed, "expected s.VY == -config.FastFallSpeed")
 end
 
 tests["falling speed is capped at MaxFallSpeed"] = function()
@@ -188,7 +191,7 @@ end
 tests["pressing down drops through a pass-through platform"] = function()
 	local s = run(Movement.new(config, 0, 25), 60)
 	s = Movement.step(s, intent({ MoveY = -1 }), config, stage)
-	assert(s.Mode == "Air")
+	assert(s.Mode == "Air", "expected s.Mode == 'Air'")
 	s = run(s, 120, intent({ MoveY = -1 }))
 	assert(s.Mode == "Ground" and s.Y == 0, "should land on the floor, Y = " .. s.Y)
 end
@@ -196,7 +199,7 @@ end
 tests["dropping through a platform does not fast-fall"] = function()
 	local s = run(Movement.new(config, 0, 25), 60)
 	s = Movement.step(s, intent({ MoveY = -1 }), config, stage)
-	assert(s.Mode == "Air")
+	assert(s.Mode == "Air", "expected s.Mode == 'Air'")
 	assert(not s.FastFalling, "the drop press should not also fast-fall")
 	s = run(s, 5, intent({ MoveY = -1 }))
 	assert(not s.FastFalling, "holding down after a drop should not fast-fall")
@@ -227,18 +230,18 @@ tests["sliding off an edge during jump squat starts falling"] = function()
 		)
 		s = Movement.step(s, intent({ JumpHeld = true }), config, stage)
 	end
-	assert(s.Mode == "Air")
+	assert(s.Mode == "Air", "expected s.Mode == 'Air'")
 end
 
 tests["pressing down on solid ground does nothing"] = function()
 	local s = Movement.step(grounded(50), intent({ MoveY = -1 }), config, stage)
-	assert(s.Mode == "Ground" and s.Y == 0)
+	assert(s.Mode == "Ground" and s.Y == 0, "expected s.Mode == 'Ground' and s.Y == 0")
 end
 
 tests["running off the edge starts falling with air jumps intact"] = function()
 	local s = run(grounded(95), 30, intent({ MoveX = 1 }))
-	assert(s.Mode == "Air")
-	assert(s.AirJumpsLeft == config.AirJumps)
+	assert(s.Mode == "Air", "expected s.Mode == 'Air'")
+	assert(s.AirJumpsLeft == config.AirJumps, "expected s.AirJumpsLeft == config.AirJumps")
 end
 
 tests["walls stop horizontal movement"] = function()
@@ -254,7 +257,7 @@ tests["walls stop horizontal movement"] = function()
 		s = Movement.step(s, intent({ MoveX = 1 }), config, wallStage)
 	end
 	assert(near(s.X, 10 - config.BodyHalfWidth, 1e-9), "X = " .. s.X)
-	assert(s.VX == 0)
+	assert(s.VX == 0, "expected s.VX == 0")
 end
 
 tests["ceilings stop upward movement"] = function()
@@ -282,7 +285,16 @@ tests["step does not change the state passed in"] = function()
 	local s = grounded()
 	local x = s.X
 	Movement.step(s, intent({ MoveX = 1 }), config, stage)
-	assert(s.X == x and s.VX == 0)
+	assert(s.X == x and s.VX == 0, "expected s.X == x and s.VX == 0")
 end
 
-return tests
+return function(t)
+	local names = {}
+	for name in tests do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in names do
+		t.test(name, tests[name])
+	end
+end

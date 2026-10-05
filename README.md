@@ -50,9 +50,16 @@ Code finds assets by name, so these must be followed:
 | `src/shared/Characters` | `ReplicatedStorage.Shared.Characters` | One data file per character: stats, animation IDs, moves. Copy `_Template.luau` to add one |
 | `src/shared/Movement` | `ReplicatedStorage.Shared.Movement` | Pure 2D movement rules (run, jumps, short hop, double jump, fast-fall, landing lag, pass-through platforms) and their tuning in `Config.luau` |
 | `src/shared/Stage` | `ReplicatedStorage.Shared.Stage` | `StageGeometry`: reads tagged stage parts into the rects movement collides with |
+| `src/shared/Feel` | `ReplicatedStorage.Shared.Feel` | Pure game-feel math: hit tiers and the hitstop formula (`HitTiers`), KO slow-mo requests (`TimeScale`), effect envelopes, a small `Signal` |
 | `src/server` | `ServerScriptService.Server` | Server logic: damage, knockback, hitboxes, stocks, match flow. `TestStage/` builds a test stage when the place has none |
-| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects. `Input/` turns keyboard, controller and touch into one intent per frame; `Fighter/` drives your character with the movement rules at 60 Hz; `Camera/` is the side-on follow camera |
-| `tests/` | — (not synced) | Unit tests for the pure modules, run outside Studio (see Setup) |
+| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects. `Input/` turns keyboard, controller and touch into one intent per frame; `Fighter/` drives your character with the movement rules at 60 Hz |
+| `src/client/Camera` | `…Client.Camera` | `FightCamera`: side-on camera that frames every fighter Smash-style, with shake and FOV punches. Framing math is in `Framing` |
+| `src/client/Feel` | `…Client.Feel` | `Feel`: one entry point for hit/KO/movement juice (camera shake, haptics, layered impact audio, hit flash, sparks, flash limiter). Cosmetic only; tuning in `Config.luau` |
+| `src/client/Settings` | `…Client.Settings` | Player settings store with presets (Default / Competitive): shake, flash, rumble, slow-mo toggles |
+| `src/client/Dev` | `…Client.Dev` | `FeelHarness`: Studio-only preview of hit effects on two placeholder blocks (keys 1–9). Off by default; turn it on with a boolean Workspace attribute `FeelHarness` = true |
+| `tests/` | — (not synced) | Unit tests (`*.spec.luau`, one folder per system), run with Lune outside Studio (see Setup) |
+| `rokit.toml`, `stylua.toml`, `selene.toml`, `.luaurc` | — | Pinned tool versions (Rojo, StyLua, selene, Lune), formatter and linter settings, strict Luau |
+| `.github/workflows/ci.yml` | — | CI on every push and pull request: format check, lint, unit tests, Rojo build |
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
 | `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, settled team decisions (marked DECIDED), build order |
@@ -61,9 +68,9 @@ Code finds assets by name, so these must be followed:
 
 ## Setup (programmers)
 
-1. Install [Git](https://git-scm.com/) and [Rojo](https://rojo.space/) (`winget install Rojo.Rojo`).
-2. Install the Rojo Studio plugin: `rojo plugin install`.
-3. Clone this repo, then from the repo folder run:
+1. Install [Git](https://git-scm.com/) and [Rokit](https://github.com/rojo-rbx/rokit), the toolchain manager.
+2. Clone this repo. From the repo folder, run `rokit install` to get the pinned versions of Rojo, StyLua, selene and Lune from `rokit.toml` (re-run it whenever that file changes), then install the Rojo Studio plugin with `rojo plugin install`.
+3. From the repo folder run:
 
    ```bash
    rojo serve
@@ -73,13 +80,15 @@ Code finds assets by name, so these must be followed:
 
 5. Press **Play** in Studio to try the movement: WASD or arrow keys and Space, a controller (stick or D-pad, A or Y to jump), or the on-screen joystick and Jump button on touch. Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it.
 
-**Unit tests.** Game rules live in pure modules (no Instances), so they run in plain [Luau](https://github.com/luau-lang/luau/releases) without Studio. Put the `luau` binary on your PATH and run, from the repo folder:
+**Checks before you push** (CI runs the same ones on every pull request). From the repo folder:
 
 ```bash
-luau tests/run.luau
+lune run tests/run          # unit tests; add a name to run only matching specs: lune run tests/run Movement
+stylua src tests            # format (CI runs stylua --check)
+selene src tests            # lint
 ```
 
-Add new test files to the list in `tests/run.luau`.
+Game rules live in pure modules (no Instances), so their tests run in Lune without Studio. Add a test by creating `tests/<System>/<Module>.spec.luau` that returns `function(t)` (see `tests/Example.spec.luau`); the runner finds it automatically.
 
 Artists and builders don't need any of this — just open the shared place in Studio.
 
