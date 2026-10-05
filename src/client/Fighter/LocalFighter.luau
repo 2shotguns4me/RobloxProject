@@ -21,7 +21,8 @@ local FRAME = 1 / 60
 
 local LocalFighter = {}
 
-local state: Movement.State? = nil
+local activeCharacter: Model? = nil
+local focusState: Movement.State? = nil -- the active character's state, for the camera
 local stage: Movement.Stage = { Solids = {}, Platforms = {} }
 local stageDirty = true
 
@@ -49,16 +50,23 @@ local function onCharacter(character: Model)
 	humanoid.PlatformStand = true
 	humanoid.AutoRotate = false
 
+	-- Each character keeps its own state, so an old character's loop finishing late
+	-- can't disturb the new one.
 	local x, y = spawnPoint()
-	state = Movement.new(MovementConfig, x, y)
+	local s = Movement.new(MovementConfig, x, y)
+	activeCharacter = character
+	focusState = s
 	InputController.clearPresses()
 	local accumulator = 0
 
 	local connection: RBXScriptConnection
 	connection = RunService.PreSimulation:Connect(function(dt)
-		if not character.Parent or humanoid.Health <= 0 then
+		if activeCharacter ~= character or not character.Parent or humanoid.Health <= 0 then
 			connection:Disconnect()
-			state = nil
+			if activeCharacter == character then
+				activeCharacter = nil
+				focusState = nil
+			end
 			return
 		end
 		if stageDirty then
@@ -66,7 +74,6 @@ local function onCharacter(character: Model)
 			stageDirty = false
 		end
 
-		local s = state :: Movement.State
 		accumulator += dt
 		local steps = 0
 		while accumulator >= FRAME and steps < Config.MaxStepsPerUpdate do
@@ -78,12 +85,11 @@ local function onCharacter(character: Model)
 			accumulator = 0
 		end
 
-		local _, spawnY = spawnPoint()
+		local spawnX, spawnY = spawnPoint()
 		if s.Y < spawnY - Config.FallRespawnDepth then
-			local sx, sy = spawnPoint()
-			s = Movement.new(MovementConfig, sx, sy)
+			s = Movement.new(MovementConfig, spawnX, spawnY)
 		end
-		state = s
+		focusState = s
 
 		local position = Vector3.new(s.X, s.Y + rootOffset(humanoid, root), StageGeometry.PlaneZ)
 		root.CFrame = CFrame.lookAt(position, position + Vector3.new(s.Facing, 0, 0))
@@ -94,7 +100,7 @@ end
 
 -- The fighter's feet in world space, for the camera.
 function LocalFighter.getFocus(): Vector3?
-	local s = state
+	local s = focusState
 	if s then
 		return Vector3.new(s.X, s.Y, StageGeometry.PlaneZ)
 	end

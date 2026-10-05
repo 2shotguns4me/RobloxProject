@@ -214,8 +214,11 @@ function InputController.read(): Movement.Intent
 		UserInputService:IsGamepadButtonDown(pad, Enum.KeyCode.DPadUp)
 	)
 
-	local keyX = axis(anyKeyDown(keys.Left), anyKeyDown(keys.Right))
-	local keyY = axis(anyKeyDown(keys.Down), anyKeyDown(keys.Up))
+	-- Ignore the keyboard while typing in chat or another text box.
+	local typing = UserInputService:GetFocusedTextBox() ~= nil
+	local keyX = if typing then 0 else axis(anyKeyDown(keys.Left), anyKeyDown(keys.Right))
+	local keyY = if typing then 0 else axis(anyKeyDown(keys.Down), anyKeyDown(keys.Up))
+	local keyJump = not typing and anyKeyDown(keys.Jump)
 
 	local jumpPressed = jumpPresses > 0
 	if jumpPressed then
@@ -225,7 +228,7 @@ function InputController.read(): Movement.Intent
 	return {
 		MoveX = strongest({ keyX, dpadX, gamepadStick.X, touchStick.X }),
 		MoveY = strongest({ keyY, dpadY, gamepadStick.Y, touchStick.Y }),
-		JumpHeld = anyKeyDown(keys.Jump) or anyGamepadButtonDown(Config.Gamepad.Jump) or touchJumpHeld,
+		JumpHeld = keyJump or anyGamepadButtonDown(Config.Gamepad.Jump) or touchJumpHeld,
 		JumpPressed = jumpPressed,
 	}
 end

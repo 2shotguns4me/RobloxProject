@@ -264,6 +264,7 @@ function Movement.step(state: State, intent: Intent, config: Config, stage: Stag
 			setMode(s, "JumpSquat")
 		elseif pressedDown and onPlatform then
 			s.DropThrough = config.DropThroughFrames
+			pressedDown = false -- this press is the drop, not a fast-fall
 			setMode(s, "Air")
 		else
 			groundRun(s, intent, config)
@@ -308,8 +309,8 @@ function Movement.step(state: State, intent: Intent, config: Config, stage: Stag
 
 	if s.Mode == "Air" then
 		moveVertically(s, config, stage)
-	elseif s.Mode == "Ground" then
-		-- Walked or ran off an edge.
+	else
+		-- Walked, ran or slid off an edge (also during jump squat or landing lag).
 		if findSupport(s, config, stage) == nil then
 			setMode(s, "Air")
 		end

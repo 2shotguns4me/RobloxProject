@@ -9,7 +9,7 @@
 	- "StageSpawn": where fighters appear (its position; it should be invisible and non-colliding).
 
 	Every stage is played on the plane Z = PlaneZ. Parts are read by their world bounding
-	box, so keep them unrotated or rotated in 90-degree steps.
+	box, so keep them unrotated or rotated in 90-degree steps (slopes aren't supported yet).
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -23,9 +23,16 @@ StageGeometry.SolidTag = "StageSolid"
 StageGeometry.PlatformTag = "StagePlatform"
 StageGeometry.SpawnTag = "StageSpawn"
 
+-- The part's world-space bounding box, so rotated parts come out the right way round.
 local function toRect(part: BasePart): Movement.Rect
-	local half = part.ExtentsSize / 2
-	local p = part.Position
+	local cf = part.CFrame
+	local size = part.Size / 2
+	local half = Vector3.new(
+		math.abs(cf.XVector.X) * size.X + math.abs(cf.YVector.X) * size.Y + math.abs(cf.ZVector.X) * size.Z,
+		math.abs(cf.XVector.Y) * size.X + math.abs(cf.YVector.Y) * size.Y + math.abs(cf.ZVector.Y) * size.Z,
+		0
+	)
+	local p = cf.Position
 	return { MinX = p.X - half.X, MaxX = p.X + half.X, MinY = p.Y - half.Y, MaxY = p.Y + half.Y }
 end
 

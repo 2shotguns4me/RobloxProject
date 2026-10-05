@@ -193,6 +193,43 @@ tests["pressing down drops through a pass-through platform"] = function()
 	assert(s.Mode == "Ground" and s.Y == 0, "should land on the floor, Y = " .. s.Y)
 end
 
+tests["dropping through a platform does not fast-fall"] = function()
+	local s = run(Movement.new(config, 0, 25), 60)
+	s = Movement.step(s, intent({ MoveY = -1 }), config, stage)
+	assert(s.Mode == "Air")
+	assert(not s.FastFalling, "the drop press should not also fast-fall")
+	s = run(s, 5, intent({ MoveY = -1 }))
+	assert(not s.FastFalling, "holding down after a drop should not fast-fall")
+end
+
+tests["sliding off an edge during landing lag starts falling"] = function()
+	-- Lands right at the floor's right edge (x = 100) while still moving right.
+	local s = Movement.new(config, 100.4, 0.01)
+	s.VX = 0.5
+	s = Movement.step(s, intent(), config, stage)
+	assert(s.Mode == "Landing", "setup: should land on the edge, got " .. s.Mode)
+	for _ = 1, config.LandingLag + 2 do
+		s = Movement.step(s, intent(), config, stage)
+		local pastEdge = s.X - config.BodyHalfWidth >= 100
+		assert(not (pastEdge and s.Mode ~= "Air"), "stayed in " .. s.Mode .. " with no ground underneath")
+	end
+end
+
+tests["sliding off an edge during jump squat starts falling"] = function()
+	-- Standing right at the floor's right edge (x = 100), still moving at run speed.
+	local s = grounded(100.9)
+	s.VX = config.RunSpeed
+	s = Movement.step(s, intent({ JumpPressed = true, JumpHeld = true }), config, stage)
+	for _ = 1, config.JumpSquat do
+		assert(
+			not (s.Mode == "JumpSquat" and s.X - config.BodyHalfWidth >= 100),
+			"jump squat continued with no ground underneath"
+		)
+		s = Movement.step(s, intent({ JumpHeld = true }), config, stage)
+	end
+	assert(s.Mode == "Air")
+end
+
 tests["pressing down on solid ground does nothing"] = function()
 	local s = Movement.step(grounded(50), intent({ MoveY = -1 }), config, stage)
 	assert(s.Mode == "Ground" and s.Y == 0)
