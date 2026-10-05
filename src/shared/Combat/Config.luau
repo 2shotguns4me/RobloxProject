@@ -38,4 +38,24 @@ return {
 		Top = 80,
 		Bottom = 50,
 	},
+
+	-- Defense: shield, dodges and DI. Starting values from the calibration table in
+	-- docs/research/mechanics-design-prompt.md. Dodges are intangible (attacks pass through)
+	-- from frame Start to frame End.
+	Defense = {
+		ShieldMax = 55, -- shield health
+		ShieldDrain = 0.12, -- health lost per frame while held
+		ShieldRegen = 0.09, -- health regained per frame while not shielding
+		ShieldDamageMultiplier = 1, -- shield health lost per % of damage blocked
+		ShieldStunBase = 2, -- frames stuck in shield after blocking: base + damage * per
+		ShieldStunPerDamage = 0.5,
+		ShieldPushPerDamage = 0.03, -- studs per frame the blocker slides back, per % blocked
+		ShieldDropLag = 7, -- frames after letting go of shield before acting
+		ShieldBreakStun = 120, -- frames stunned when the shield breaks
+		ShieldAfterBreak = 30, -- shield health once the stun wears off
+		SpotDodge = { Start = 3, End = 17, Total = 26 },
+		Roll = { Start = 4, End = 16, Total = 30, Speed = 0.4, MoveFrames = 16 },
+		AirDodge = { Start = 3, End = 29, Total = 40, LandingLag = 10 },
+		DIMaxDegrees = 14, -- holding sideways to the launch bends it by up to this much
+	},
 }

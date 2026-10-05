@@ -25,6 +25,7 @@ local smashStickOut = false -- right stick is past the smash threshold
 local gamepadStick = Vector2.zero
 local touchStick = Vector2.zero
 local touchJumpHeld = false
+local touchShieldHeld = false
 
 local function anyKeyDown(keys: { Enum.KeyCode }): boolean
 	for _, key in keys do
@@ -128,6 +129,17 @@ local function buildTouchControls()
 	knob.Parent = base
 
 	local jumpButton = roundButton("Jump", touch.JumpButtonSize, touch.JumpButtonPosition, gui)
+	local shieldButton = roundButton("Shield", touch.ShieldButtonSize, touch.ShieldButtonPosition, gui)
+	shieldButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch then
+			touchShieldHeld = true
+		end
+	end)
+	shieldButton.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch then
+			touchShieldHeld = false
+		end
+	end)
 	local attackButton = roundButton("Attack", touch.AttackButtonSize, touch.AttackButtonPosition, gui)
 
 	-- Attack: a tap attacks when the thumb lifts; swiping sideways off the button smashes
@@ -285,6 +297,7 @@ function InputController.read(): Fighter.Intent
 	local keyX = if typing then 0 else keyboardX()
 	local keyY = if typing then 0 else axis(anyKeyDown(keys.Down), anyKeyDown(keys.Up))
 	local keyJump = not typing and anyKeyDown(keys.Jump)
+	local keyShield = not typing and anyKeyDown(keys.Shield)
 
 	local jumpPressed = jumpPresses > 0
 	if jumpPressed then
@@ -307,6 +320,7 @@ function InputController.read(): Fighter.Intent
 		AttackPressed = attackPressed,
 		SmashPressed = smashPressed,
 		SmashX = smashX,
+		ShieldHeld = keyShield or anyGamepadButtonDown(Config.Gamepad.Shield) or touchShieldHeld,
 	}
 end
 

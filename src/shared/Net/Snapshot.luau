@@ -24,6 +24,9 @@ export type Snapshot = {
 	AttackFrame: number,
 	Serial: number, -- the attack's serial (0 when not attacking)
 	Hitstun: boolean,
+	Defense: string, -- Fighter.Defense, "" when none
+	DefenseFrame: number,
+	Shield: number, -- shield health (for drawing the bubble)
 	Percent: number, -- filled in by the server when relaying; clients' own values are ignored
 }
 
@@ -32,6 +35,15 @@ local MODES: { [string]: Movement.Mode } = {
 	JumpSquat = "JumpSquat",
 	Air = "Air",
 	Landing = "Landing",
+}
+
+local DEFENSES: { [string]: Fighter.Defense } = {
+	Shield = "Shield",
+	ShieldDrop = "ShieldDrop",
+	ShieldBreak = "ShieldBreak",
+	SpotDodge = "SpotDodge",
+	Roll = "Roll",
+	AirDodge = "AirDodge",
 }
 
 function Snapshot.fromFighter(f: Fighter.State, t: number): Snapshot
@@ -49,12 +61,15 @@ function Snapshot.fromFighter(f: Fighter.State, t: number): Snapshot
 		AttackFrame = if attack then attack.Frame else 0,
 		Serial = if attack then attack.Serial else 0,
 		Hitstun = f.Hitstun > 0,
+		Defense = f.Defense or "",
+		DefenseFrame = f.DefenseFrame,
+		Shield = f.Shield,
 		Percent = f.Percent,
 	}
 end
 
--- A stand-in fighter at the snapshot's position, for hit detection and the camera. It never
--- attacks (remote attacks are confirmed by the server, not detected locally).
+-- A stand-in fighter at the snapshot's position and defensive state, for hit detection and the
+-- camera. It never attacks (remote attacks are confirmed by the server, not detected locally).
 function Snapshot.toGhost(s: Snapshot, id: number, ctx: Fighter.Context): Fighter.State
 	local f = Fighter.new(ctx, id, s.X, s.Y)
 	local body = f.Body
@@ -63,6 +78,9 @@ function Snapshot.toGhost(s: Snapshot, id: number, ctx: Fighter.Context): Fighte
 	body.Facing = s.Facing
 	body.Mode = s.Mode
 	f.Percent = s.Percent
+	f.Defense = DEFENSES[s.Defense]
+	f.DefenseFrame = s.DefenseFrame
+	f.Shield = s.Shield
 	return f
 end
 
@@ -70,6 +88,7 @@ export type Limits = {
 	MaxPosition: number,
 	MaxSpeed: number,
 	MaxAttackFrame: number,
+	MaxShield: number,
 }
 
 -- A real number (not NaN or infinite) no bigger than `limit` either way.
@@ -90,6 +109,10 @@ function Snapshot.sanitize(raw: any, moveset: Fighter.Moveset, limits: Limits): 
 	if not mode or type(attack) ~= "string" or type(raw.Hitstun) ~= "boolean" then
 		return nil
 	end
+	local defense = raw.Defense
+	if defense ~= "" and DEFENSES[defense] == nil then
+		return nil
+	end
 	if attack ~= "" and moveset[attack] == nil then
 		return nil
 	end
@@ -102,6 +125,8 @@ function Snapshot.sanitize(raw: any, moveset: Fighter.Moveset, limits: Limits): 
 		or not isFiniteNumber(raw.VY, speed)
 		or not isFiniteNumber(raw.AttackFrame, limits.MaxAttackFrame)
 		or not isFiniteNumber(raw.Serial, 1e9)
+		or not isFiniteNumber(raw.DefenseFrame, limits.MaxAttackFrame)
+		or not isFiniteNumber(raw.Shield, limits.MaxShield)
 		or (raw.Facing ~= 1 and raw.Facing ~= -1)
 	then
 		return nil
@@ -118,6 +143,9 @@ function Snapshot.sanitize(raw: any, moveset: Fighter.Moveset, limits: Limits): 
 		AttackFrame = math.floor(raw.AttackFrame),
 		Serial = math.floor(raw.Serial),
 		Hitstun = raw.Hitstun,
+		Defense = defense,
+		DefenseFrame = math.floor(raw.DefenseFrame),
+		Shield = raw.Shield,
 		Percent = 0,
 	}
 	return clean

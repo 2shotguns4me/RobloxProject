@@ -45,4 +45,5 @@ return {
 	MaxPosition = 1e5,
 	MaxSpeed = 50,
 	MaxAttackFrame = 1000,
+	MaxShield = 1000,
 }

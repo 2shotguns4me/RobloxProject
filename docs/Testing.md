@@ -53,6 +53,9 @@ Controls are in the README's Setup section.
 - [ ] **No red errors** in Output from our scripts (`Client`, `Server`, `Shared`).
 - [ ] **Movement:** run, walk (partial stick), full hop vs short hop (tap), double jump, fast-fall (press down after the apex), land on and drop through thin platforms, walls and ceilings stop you.
 - [ ] **Combat:** jab (J), tilt (A/D + J), smash (L), neutral air (J in the air). Each hit raises the opponent's % once, freezes both of you briefly (hitstop), shakes and sparks. A smash at ~95% from mid-stage KOs; the opponent respawns.
+- [ ] **Shield:** hold Shift: a blue bubble appears, shrinks and goes red while held; you can't walk but can jump out. Attacks on it add no % and push you back a little. Held until empty, it breaks: you're stuck for ~2 s. Let go: a moment's delay before you can act.
+- [ ] **Dodges:** Shift + S spot dodges, Shift + A/D rolls that way, Shift in the air air-dodges (once until you land). You go see-through for part of each, and attacks pass through you then.
+- [ ] **DI:** get launched by a smash while holding a direction at right angles to the launch (e.g. down if flying up-right): you fly noticeably lower than without.
 - [ ] **Bot:** walks to you, attacks (and its hits raise *your* % and launch you), smashes once you're damaged, double-jumps back when knocked off, and doesn't run off the edge after you. For exact %/KO checks, set `Opponent = "Dummy"` in `src/client/Training/Config.luau` so it stands still.
 - [ ] **Camera** keeps you and the opponent in frame.
 - [ ] **Falling off** the stage KOs you and respawns you.
@@ -120,6 +123,8 @@ Give Claude (or a teammate) something it can act on:
   |---|---|
   | Running too fast/slow, jumps too high/floaty, falls too slow | `src/shared/Movement/Config.luau` |
   | Hits send too far/not far enough, KO too early/late, too much stun | `src/shared/Combat/Config.luau` |
+  | Shield too strong/weak, dodges too long/short, DI too strong/weak | `Defense` in `src/shared/Combat/Config.luau` |
+  | Shield bubble size/colour, how see-through dodges look | `src/client/Fighter/Config.luau` |
   | An attack is too slow/fast or too strong/weak, hitbox too big/small | `src/shared/Combat/TestMoveset.luau` (later each fighter's data file) |
   | Hit freeze, shake, sparks, sound, rumble | `src/shared/Feel/HitTiers.luau`, `src/client/Feel/Config.luau` |
   | Camera too close/far, too slow to follow | `src/client/Camera/Config.luau` |

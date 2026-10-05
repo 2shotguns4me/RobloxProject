@@ -43,6 +43,7 @@ local NetClient = require("../Net/NetClient")
 local TrainingConfig = require("../Training/Config")
 local TrainingDummy = require("../Training/TrainingDummy")
 local Config = require("./Config")
+local DefenseView = require("./DefenseView")
 
 local FRAME = 1 / 60
 -- Local ids for your fighter and the training opponent. Other players use their UserId;
@@ -173,6 +174,23 @@ local function playHitFeel(
 	})
 end
 
+-- A blocked hit: the hit effects scaled down (a smaller spark, sound, rumble and camera
+-- shake), with no flash or shake on the blocker itself. Blocks between other players play
+-- nothing, so they don't shake your camera.
+local function playBlockFeel(position: Vector3, damage: number, attackerIsLocal: boolean, victimIsLocal: boolean)
+	if not attackerIsLocal and not victimIsLocal then
+		return
+	end
+	Feel.PlayHit({
+		position = position,
+		victim = nil,
+		damage = damage * Config.BlockFeelScale,
+		attackerIsLocal = attackerIsLocal,
+		victimIsLocal = victimIsLocal,
+		playerCount = math.max(#Players:GetPlayers(), 2),
+	})
+end
+
 local function updateRemoteLabels(ghosts: { Fighter.State })
 	local seen = {}
 	for _, ghost in ghosts do
@@ -246,14 +264,23 @@ local function onCharacter(character: Model)
 
 	local function applyServerEvents()
 		for _, hit in NetClient.takeHits() do
-			local r = hit.Result
 			local position = world(hit.X, hit.Y)
-			if hit.VictimId == myUserId then
+			local isVictim = hit.VictimId == myUserId
+			local victimModel = if isVictim then character else characterOf(hit.VictimId)
+			local blocked, r = hit.ShieldResult, hit.Result
+			if isVictim and blocked then
+				me = Combat.applyShieldHit(me, blocked)
+			elseif isVictim and r then
 				me = Combat.applyHit(me, r)
-				playHitFeel(position, r.Damage, r.DirectionX, r.DirectionY, character, false, true)
-			elseif hit.AttackerId ~= myUserId then
-				-- Someone else's hit: effects only. (Your own hits already played when you landed them.)
-				playHitFeel(position, r.Damage, r.DirectionX, r.DirectionY, characterOf(hit.VictimId), false, false)
+			end
+			-- Effects for hits on you and between other players. (Your own hits already played
+			-- when you landed them.)
+			if hit.AttackerId ~= myUserId then
+				if blocked then
+					playBlockFeel(position, blocked.Damage, false, isVictim)
+				elseif r then
+					playHitFeel(position, r.Damage, r.DirectionX, r.DirectionY, victimModel, false, isVictim)
+				end
 			end
 		end
 		for _, ko in NetClient.takeKOs() do
@@ -315,7 +342,11 @@ local function onCharacter(character: Model)
 				-- Training hits are local only.
 				local victim = if hit.VictimId == DUMMY_ID then dummyModel else character
 				local fromMe = hit.AttackerId == PLAYER_ID
-				playHitFeel(position, hit.Damage, hit.DirectionX, hit.DirectionY, victim, fromMe, not fromMe)
+				if hit.Shielded then
+					playBlockFeel(position, hit.Damage, fromMe, not fromMe)
+				else
+					playHitFeel(position, hit.Damage, hit.DirectionX, hit.DirectionY, victim, fromMe, not fromMe)
+				end
 			elseif hit.AttackerId == PLAYER_ID and myAttack then
 				-- You hit another player: show it now, let the server decide the damage. Send
 				-- the state first, so the server has this attack on record before the claim.
@@ -328,15 +359,19 @@ local function onCharacter(character: Model)
 					T = NetClient.now(),
 					VictimT = ghostTimes[hit.VictimId] or NetClient.now(),
 				})
-				playHitFeel(
-					position,
-					hit.Damage,
-					hit.DirectionX,
-					hit.DirectionY,
-					characterOf(hit.VictimId),
-					true,
-					false
-				)
+				if hit.Shielded then
+					playBlockFeel(position, hit.Damage, true, false)
+				else
+					playHitFeel(
+						position,
+						hit.Damage,
+						hit.DirectionX,
+						hit.DirectionY,
+						characterOf(hit.VictimId),
+						true,
+						false
+					)
+				end
 			end
 		end
 
@@ -350,6 +385,7 @@ local function onCharacter(character: Model)
 	connection = RunService.PreSimulation:Connect(function(dt: number)
 		if activeCharacter ~= character or not character.Parent or humanoid.Health <= 0 then
 			connection:Disconnect()
+			DefenseView.keepOnly({}) -- no shield bubbles or see-through left behind
 			if activeCharacter == character then
 				activeCharacter = nil
 				for _, callback in focusCallbacks do
@@ -391,6 +427,8 @@ local function onCharacter(character: Model)
 		root.AssemblyLinearVelocity = Vector3.zero
 		root.AssemblyAngularVelocity = Vector3.zero
 		PercentLabel.set(myLabel, me.Percent)
+		local shown: { [any]: boolean } = { [PLAYER_ID] = true }
+		DefenseView.update(PLAYER_ID, character, me, ctx)
 
 		local targets = { position }
 		local view, current = dummyView, dummy
@@ -400,11 +438,16 @@ local function onCharacter(character: Model)
 			if showDummy then
 				TrainingDummy.render(view, current, MovementConfig.BodyHeight, Feel.GetVisualOffset(view.Model))
 				table.insert(targets, centre(current))
+				DefenseView.update(DUMMY_ID, view.Model, current, ctx)
+				shown[DUMMY_ID] = true
 			end
 		end
 		for _, ghost in latestGhosts do
 			table.insert(targets, centre(ghost))
+			DefenseView.update(ghost.Id, characterOf(ghost.Id), ghost, ctx)
+			shown[ghost.Id] = true
 		end
+		DefenseView.keepOnly(shown)
 		updateRemoteLabels(latestGhosts)
 		for _, callback in focusCallbacks do
 			callback(targets)

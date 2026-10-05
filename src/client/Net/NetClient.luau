@@ -29,7 +29,8 @@ export type ConfirmedHit = {
 	AttackerId: number,
 	VictimId: number,
 	Move: string,
-	Result: Combat.HitResult,
+	Result: Combat.HitResult?,
+	ShieldResult: Combat.ShieldHitResult?, -- set instead of Result when the hit was blocked
 	PercentVersion: number, -- the victim's % version after this hit
 	X: number,
 	Y: number,
@@ -71,8 +72,9 @@ function NetClient.start()
 		History.push(h, s)
 	end)
 	Remotes.reliable("Hit").OnClientEvent:Connect(function(hit: ConfirmedHit)
-		if hit.VictimId == myUserId then
-			noteMyPercent(hit.Result.Percent, hit.PercentVersion)
+		local result = hit.Result
+		if hit.VictimId == myUserId and result then
+			noteMyPercent(result.Percent, hit.PercentVersion)
 		end
 		table.insert(pendingHits, hit)
 	end)

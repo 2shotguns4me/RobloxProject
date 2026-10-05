@@ -31,6 +31,9 @@ local function snap(t: number, x: number, fields: { [string]: any }?): Snapshot.
 		AttackFrame = 0,
 		Serial = 0,
 		Hitstun = false,
+		Defense = "",
+		DefenseFrame = 0,
+		Shield = 55,
 		Percent = 0,
 	}
 	if fields then
@@ -143,6 +146,18 @@ return function(t)
 		t.eq(clean.Percent, 0)
 	end)
 
+	t.test("snapshot carries shield and dodge state to ghosts", function()
+		local f = Fighter.new(ctx, 1, 0, 0)
+		f.Defense = "Roll"
+		f.DefenseFrame = 6
+		f.Shield = 30
+		local ghost = Snapshot.toGhost(Snapshot.fromFighter(f, 1), 2, ctx)
+		t.eq(ghost.Defense, "Roll")
+		t.eq(ghost.DefenseFrame, 6)
+		t.eq(ghost.Shield, 30)
+		t.truthy(Fighter.isIntangible(ghost, ctx), "a ghost mid-roll is intangible too")
+	end)
+
 	t.test("sanitize rejects malformed or out-of-range snapshots", function()
 		local good = Snapshot.fromFighter(Fighter.new(ctx, 1, 4, 7), 12.5)
 		local function with(key: string, value: any): any
@@ -157,6 +172,8 @@ return function(t)
 		t.eq(Snapshot.sanitize(with("Mode", "Flying"), ctx.Moveset, NetConfig), nil, "unknown mode")
 		t.eq(Snapshot.sanitize(with("Attack", "InstaKill"), ctx.Moveset, NetConfig), nil, "unknown move")
 		t.eq(Snapshot.sanitize(with("Facing", 0), ctx.Moveset, NetConfig), nil, "bad facing")
+		t.eq(Snapshot.sanitize(with("Defense", "GodMode"), ctx.Moveset, NetConfig), nil, "unknown defense")
+		t.eq(Snapshot.sanitize(with("Shield", 0 / 0), ctx.Moveset, NetConfig), nil, "NaN shield")
 	end)
 
 	-- Hit validation
@@ -186,6 +203,28 @@ return function(t)
 		local attacker, victim = scenario(3)
 		t.eq(HitValidation.check(claim(), attacker, victim, ctx, NetConfig, 11), false, "too old")
 		t.eq(HitValidation.check(claim({ T = 10.4 }), attacker, victim, ctx, NetConfig, 10.2), false, "future")
+	end)
+
+	t.test("claims on a victim that was mid-dodge fail", function()
+		local attacker = scenario(3)
+		local victim = History.new(NetConfig.HistorySeconds)
+		for i = 0, 10 do
+			History.push(victim, snap(10 + i / 30, 3, { Defense = "SpotDodge", DefenseFrame = 8 }))
+		end
+		local ok, reason = HitValidation.check(claim(), attacker, victim, ctx, NetConfig, 10.2)
+		t.eq(ok, false)
+		t.eq(reason, "victim was dodging")
+	end)
+
+	t.test("a claim on a shielding victim passes and reports the shield", function()
+		local attacker = scenario(3)
+		local victim = History.new(NetConfig.HistorySeconds)
+		for i = 0, 10 do
+			History.push(victim, snap(10 + i / 30, 3, { Defense = "Shield", DefenseFrame = 20 }))
+		end
+		local ok, _, victimGhost = HitValidation.check(claim(), attacker, victim, ctx, NetConfig, 10.2)
+		t.truthy(ok, "blocked hits still count, as shield hits")
+		t.truthy(victimGhost and Fighter.isShielding(victimGhost), "server can tell it was blocked")
 	end)
 
 	t.test("claims on a victim that was out of range fail", function()

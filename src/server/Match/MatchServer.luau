@@ -8,8 +8,10 @@
 	  and a version number that goes up whenever that % changes.
 	- HitClaim: one claim per attack per victim (HitValidation.isNewHit), checked against both
 	  fighters' recorded history (HitValidation.check). A claim whose attack hasn't arrived yet
-	  is checked once more shortly after. Then the hit is worked out (Combat.computeHit) and
-	  sent to everyone; the victim's client applies it.
+	  is checked once more shortly after. Then the hit is worked out (Combat.computeHit, or
+	  Combat.computeShieldHit if the victim was shielding) and sent to everyone; the victim's
+	  client applies it. Shields and dodges are judged by the server's own DefenseGuard, not
+	  just what the victim's client reports.
 	- KO: accepted if the player's recent history reaches the blast zone (HitValidation.checkKO);
 	  their % resets and everyone sees the KO.
 
@@ -25,6 +27,7 @@ local Shared = ReplicatedStorage.Shared
 local Combat = require(Shared.Combat.Combat)
 local CombatConfig = require(Shared.Combat.Config)
 local Fighter = require(Shared.Combat.Fighter)
+local DefenseGuard = require(Shared.Net.DefenseGuard)
 local TestMoveset = require(Shared.Combat.TestMoveset)
 local MovementConfig = require(Shared.Movement.Config)
 local History = require(Shared.Net.History)
@@ -42,6 +45,7 @@ type Record = {
 	PercentVersion: number, -- goes up every time Percent changes
 	Weight: number,
 	LastHits: { [number]: HitValidation.LastHit }, -- by victim UserId
+	Guard: DefenseGuard.Guard,
 }
 
 local ctx: Fighter.Context = {
@@ -63,6 +67,7 @@ local function addPlayer(player: Player)
 		PercentVersion = 0,
 		Weight = CombatConfig.DefaultWeight,
 		LastHits = {},
+		Guard = DefenseGuard.new(ctx),
 	}
 end
 
@@ -80,7 +85,11 @@ local function onState(player: Player, raw: any)
 	-- The client stamps its own time; keep it within what the server will rewind to.
 	local t = now()
 	s.T = math.clamp(s.T, t - NetConfig.MaxRewindSeconds, t)
+	local newest = History.latest(record.History)
 	History.push(record.History, s)
+	if History.latest(record.History) ~= newest then
+		DefenseGuard.observe(record.Guard, s, ctx)
+	end
 
 	local relayed = table.clone(s)
 	relayed.Percent = record.Percent
@@ -101,7 +110,8 @@ local function processClaim(player: Player, claim: HitValidation.Claim, isRetry:
 		return
 	end
 
-	local ok, reason = HitValidation.check(claim, attacker.History, victim.History, ctx, NetConfig, now())
+	local ok, reason, victimGhost =
+		HitValidation.check(claim, attacker.History, victim.History, ctx, NetConfig, now(), victim.Guard)
 	if not ok then
 		if reason == "attack not in history" and not isRetry then
 			-- The state showing this attack may still be on its way; look again shortly.
@@ -114,20 +124,30 @@ local function processClaim(player: Player, claim: HitValidation.Claim, isRetry:
 	attacker.LastHits[claim.VictimId] = { Serial = claim.Serial, T = claim.T }
 
 	local a = History.sample(attacker.History, claim.T) :: Snapshot.Snapshot
-	local v = History.sample(victim.History, claim.VictimT) :: Snapshot.Snapshot
+	local v = (victimGhost :: Fighter.State).Body
 	local move = ctx.Moveset[claim.Move]
-	local result = Combat.computeHit(ctx, move, a.Facing, victim.Percent, victim.Weight, #Players:GetPlayers())
-	setPercent(victim, result.Percent)
-
-	Remotes.reliable("Hit"):FireAllClients({
+	local playerCount = #Players:GetPlayers()
+	local hit = {
 		AttackerId = player.UserId,
 		VictimId = claim.VictimId,
 		Move = claim.Move,
-		Result = result,
+		Result = nil :: Combat.HitResult?,
+		ShieldResult = nil :: Combat.ShieldHitResult?, -- set instead of Result when blocked
 		PercentVersion = victim.PercentVersion,
 		X = v.X,
 		Y = v.Y + MovementConfig.BodyHeight / 2,
-	})
+	}
+	if victimGhost and DefenseGuard.shieldBlocks(victim.Guard, victimGhost) then
+		local blocked = Combat.computeShieldHit(ctx, move, a.Facing, playerCount)
+		DefenseGuard.damageShield(victim.Guard, blocked.ShieldDamage)
+		hit.ShieldResult = blocked
+	else
+		local result = Combat.computeHit(ctx, move, a.Facing, victim.Percent, victim.Weight, playerCount)
+		setPercent(victim, result.Percent)
+		hit.Result = result
+		hit.PercentVersion = victim.PercentVersion
+	end
+	Remotes.reliable("Hit"):FireAllClients(hit)
 end
 
 local function onHitClaim(player: Player, raw: any)

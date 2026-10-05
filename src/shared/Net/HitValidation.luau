@@ -8,7 +8,10 @@
 	- the attacker's history shows that very attack (move + serial) around that time;
 	- the attack's hitbox, on that frame and placed where the attacker was, overlaps the
 	  victim's body where the victim was, with a little tolerance. This uses the same
-	  Fighter.activeHitbox/hurtbox rules as the simulation.
+	  Fighter.activeHitbox/hurtbox rules as the simulation;
+	- the victim wasn't in the intangible part of a dodge then (timed by the server's
+	  DefenseGuard when one is given, not by the client's own frame count).
+	Whether it was blocked is the caller's call (DefenseGuard.shieldBlocks on victimGhost).
 	...and it's a new hit (isNewHit): a later attack than the last hit on that victim, and not
 	sooner after it than any real move allows.
 
@@ -17,6 +20,7 @@
 
 local Fighter = require("../Combat/Fighter")
 local Movement = require("../Movement/Movement")
+local DefenseGuard = require("./DefenseGuard")
 local History = require("./History")
 local Snapshot = require("./Snapshot")
 
@@ -73,14 +77,16 @@ end
 
 -- Returns true, or false and a short reason (for logging). The reason "attack not in history"
 -- can mean the attack's state just hasn't arrived yet; the caller may retry once.
+-- On success also returns the victim as the server saw it (shield, dodge, position).
 function HitValidation.check(
 	claim: Claim,
 	attacker: History.History,
 	victim: History.History,
 	ctx: Fighter.Context,
 	cfg: Config,
-	now: number
-): (boolean, string?)
+	now: number,
+	victimGuard: DefenseGuard.Guard?
+): (boolean, string?, Fighter.State?)
 	local move = ctx.Moveset[claim.Move]
 	if not move then
 		return false, "unknown move"
@@ -110,7 +116,14 @@ function HitValidation.check(
 	if not hitbox then
 		return false, "not an active frame"
 	end
-	local hurtbox = Fighter.hurtbox(Snapshot.toGhost(v, 1, ctx), ctx)
+	local victimGhost = Snapshot.toGhost(v, 1, ctx)
+	local dodging = if victimGuard
+		then DefenseGuard.intangibleAt(victimGuard, victimGhost, claim.VictimT, ctx)
+		else Fighter.isIntangible(victimGhost, ctx)
+	if dodging then
+		return false, "victim was dodging"
+	end
+	local hurtbox = Fighter.hurtbox(victimGhost, ctx)
 	local tol = cfg.HitTolerance
 	local overlaps = hitbox.MinX - tol < hurtbox.MaxX
 		and hitbox.MaxX + tol > hurtbox.MinX
@@ -119,7 +132,7 @@ function HitValidation.check(
 	if not overlaps then
 		return false, "out of range"
 	end
-	return true, nil
+	return true, nil, victimGhost
 end
 
 -- True if the fighter got within KOTolerance of leaving the blast zone at any point in its
