@@ -6,6 +6,28 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+
+      "Assets": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+
+        "Characters": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true
+        },
+        "Stages": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true
+        },
+        "VFX": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true
+        },
+        "Sounds": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true
+        }
       }
     },
 
