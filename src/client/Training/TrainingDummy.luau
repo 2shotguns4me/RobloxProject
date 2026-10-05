@@ -50,8 +50,4 @@ function TrainingDummy.render(view: View, f: Fighter.State, bodyHeight: number, 
 	PercentLabel.set(view.Label, f.Percent)
 end
 
-function TrainingDummy.centre(f: Fighter.State, bodyHeight: number): Vector3
-	return Vector3.new(f.Body.X, f.Body.Y + bodyHeight / 2, StageGeometry.PlaneZ)
-end
-
 return TrainingDummy

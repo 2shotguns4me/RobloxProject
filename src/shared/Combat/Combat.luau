@@ -34,6 +34,61 @@ export type Hit = {
 	Y: number,
 }
 
+-- Everything a hit does to its victim, worked out from the victim's percent before the hit.
+-- The server computes this for online hits and sends it to the victim's client, which
+-- applies it with Combat.applyHit; local hits do both steps at once.
+export type HitResult = {
+	Damage: number,
+	Percent: number, -- victim's percent after the hit
+	Knockback: number,
+	VX: number, -- launch velocity, studs per frame
+	VY: number,
+	Hitstun: number,
+	VictimHitstop: number,
+	AttackerHitstop: number,
+	DirectionX: number, -- unit launch direction
+	DirectionY: number,
+}
+
+function Combat.computeHit(
+	ctx: Fighter.Context,
+	move: Fighter.Move,
+	attackerFacing: number,
+	victimPercent: number,
+	victimWeight: number,
+	playerCount: number
+): HitResult
+	local percent = victimPercent + move.Damage
+	local kb =
+		Knockback.compute(ctx.Combat, percent, move.Damage, victimWeight, move.BaseKnockback, move.KnockbackGrowth)
+	local vx, vy = Knockback.launchVelocity(ctx.Combat, kb, move.Angle, attackerFacing)
+	local victimFrames, attackerFrames = HitTiers.hitstopFrames(move.Damage, { playerCount = playerCount })
+	local radians = math.rad(move.Angle)
+	return {
+		Damage = move.Damage,
+		Percent = percent,
+		Knockback = kb,
+		VX = vx,
+		VY = vy,
+		Hitstun = Knockback.hitstunFrames(ctx.Combat, kb),
+		VictimHitstop = victimFrames,
+		AttackerHitstop = attackerFrames,
+		DirectionX = math.cos(radians) * attackerFacing,
+		DirectionY = math.sin(radians),
+	}
+end
+
+-- Applies a hit to its victim: damage, launch, hitstun, hitstop, and cancels its attack.
+function Combat.applyHit(victim: Fighter.State, result: HitResult): Fighter.State
+	local v = table.clone(victim)
+	v.Percent = result.Percent
+	v.Body = Movement.launch(v.Body, result.VX, result.VY)
+	v.Hitstun = result.Hitstun
+	v.Hitstop = math.max(v.Hitstop, result.VictimHitstop)
+	v.Attack = nil
+	return v
+end
+
 local function overlap(a: Movement.Rect, b: Movement.Rect): Movement.Rect?
 	local minX, maxX = math.max(a.MinX, b.MinX), math.min(a.MaxX, b.MaxX)
 	local minY, maxY = math.max(a.MinY, b.MinY), math.min(a.MaxY, b.MaxY)
@@ -83,39 +138,24 @@ function Combat.resolveHits(fighters: { Fighter.State }, ctx: Fighter.Context): 
 			attacker.Attack = attack
 		end
 
-		victim.Percent += move.Damage
-		local kb = Knockback.compute(
-			ctx.Combat,
-			victim.Percent,
-			move.Damage,
-			victim.Weight,
-			move.BaseKnockback,
-			move.KnockbackGrowth
-		)
-		local vx, vy = Knockback.launchVelocity(ctx.Combat, kb, move.Angle, attacker.Body.Facing)
-		victim.Body = Movement.launch(victim.Body, vx, vy)
-		victim.Hitstun = Knockback.hitstunFrames(ctx.Combat, kb)
-		victim.Attack = nil
-
-		local victimFrames, attackerFrames = HitTiers.hitstopFrames(move.Damage, { playerCount = playerCount })
-		victim.Hitstop = math.max(victim.Hitstop, victimFrames)
-		attacker.Hitstop = math.max(attacker.Hitstop, attackerFrames)
+		local hit = Combat.computeHit(ctx, move, attacker.Body.Facing, victim.Percent, victim.Weight, playerCount)
+		victim = Combat.applyHit(victim, hit)
+		attacker.Hitstop = math.max(attacker.Hitstop, hit.AttackerHitstop)
 
 		result[p.ai] = attacker
 		result[p.vi] = victim
 
-		local radians = math.rad(move.Angle)
 		table.insert(hits, {
 			AttackerId = attacker.Id,
 			VictimId = victim.Id,
 			Move = p.name,
 			Damage = move.Damage,
-			Knockback = kb,
-			Percent = victim.Percent,
-			VictimHitstop = victimFrames,
-			AttackerHitstop = attackerFrames,
-			DirectionX = math.cos(radians) * attacker.Body.Facing,
-			DirectionY = math.sin(radians),
+			Knockback = hit.Knockback,
+			Percent = hit.Percent,
+			VictimHitstop = hit.VictimHitstop,
+			AttackerHitstop = hit.AttackerHitstop,
+			DirectionX = hit.DirectionX,
+			DirectionY = hit.DirectionY,
 			X = (p.contact.MinX + p.contact.MaxX) / 2,
 			Y = (p.contact.MinY + p.contact.MaxY) / 2,
 		})

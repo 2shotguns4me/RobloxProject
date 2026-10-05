@@ -70,6 +70,7 @@ export type Intent = {
 
 export type Attack = {
 	Name: string,
+	Serial: number, -- counts up with every attack this fighter starts; identifies it online
 	Frame: number, -- 1 on the first frame of the move
 	Hit: { [number]: boolean }, -- fighter ids this attack has already hit
 }
@@ -85,6 +86,7 @@ export type State = {
 	AttackBuffer: number, -- frames left on a buffered attack press
 	BufferedSmash: boolean,
 	BufferedSmashX: number,
+	AttackCount: number, -- attacks started so far (the next attack's Serial is this + 1)
 }
 
 local AERIALS = { NeutralAir = true }
@@ -113,6 +115,7 @@ function Fighter.new(ctx: Context, id: number, x: number, y: number, weight: num
 		AttackBuffer = 0,
 		BufferedSmash = false,
 		BufferedSmashX = 0,
+		AttackCount = 0,
 	}
 end
 
@@ -203,7 +206,8 @@ function Fighter.step(state: State, intent: Intent, ctx: Context): State
 		local name, facing = chooseMove(f, intent, ctx)
 		if name then
 			f.AttackBuffer = 0
-			f.Attack = { Name = name, Frame = 0, Hit = {} }
+			f.AttackCount += 1
+			f.Attack = { Name = name, Serial = f.AttackCount, Frame = 0, Hit = {} }
 			if facing then
 				local body = table.clone(f.Body)
 				body.Facing = facing

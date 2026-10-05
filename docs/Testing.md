@@ -61,6 +61,20 @@ Controls are in the README's Setup section.
 - [ ] **Controller** if you have one: stick/D-pad, A or Y jump, X attack, right-stick flick smash.
 - [ ] **Touch:** **Test → Device** → pick a phone, then Play: joystick on the left half, Jump and Attack buttons, swipe off Attack to smash.
 
+### Two players (multiplayer)
+
+Test multiplayer changes with a local server and two players, all in Studio on one PC:
+
+1. Rojo connected as usual (Edit mode).
+2. **Test** tab → **Clients and Servers** → set **2** players → **Start**. Studio opens a server window and one window per player.
+3. Fight in the player windows. Check:
+   - [ ] Each player sees the other move smoothly, with a % label above them.
+   - [ ] Your hits on the other player show straight away, and their % goes up in **both** windows.
+   - [ ] Getting hit raises your % and launches you; a smash at high % KOs, and the KO burst shows for both.
+   - [ ] The orange bot is gone while two players are in, and comes back when one leaves.
+   - [ ] The **server** window's Output shows no errors. In Studio it also prints `rejected hit from …` when it turns down a hit claim; a few around lag spikes are fine, a rejection for every hit is a bug.
+4. **Cleanup** (Test tab) closes all the windows.
+
 The Feel harness previews hit effects on two placeholder blocks: add a boolean Workspace attribute `FeelHarness` = true, Play, then keys 1–9.
 
 ### Common problems
@@ -110,6 +124,7 @@ Give Claude (or a teammate) something it can act on:
   | Hit freeze, shake, sparks, sound, rumble | `src/shared/Feel/HitTiers.luau`, `src/client/Feel/Config.luau` |
   | Camera too close/far, too slow to follow | `src/client/Camera/Config.luau` |
   | Bot too easy/hard, too twitchy, smashes too much | `src/shared/Bot/Config.luau` |
+  | Online: other players look jittery or late, fair hits rejected | `src/shared/Net/Config.luau` |
   | Touch buttons too small, in the wrong place | `src/client/Input/Config.luau` |
 
 - **Screenshots** help with anything visual. **Screen recordings:** keep them short (5–15 s, one problem each) and say the timestamp; Claude can only look at extracted still frames, so describe anything about timing or feel in words too.
