@@ -73,7 +73,8 @@ Artists and builders don't need any of this — just open the shared place in St
 
 - **Only one person runs Rojo into the shared Team Create place**, syncing from an up-to-date `main`. Everyone else tests code in their own local copy. Multiple people syncing into the shared place overwrite each other.
 - Edit code in `src/`, never in Studio's script editor — Studio-side edits to synced scripts get overwritten.
-- Avoid code conflicts: one module per system (e.g. `Knockback.luau`, `Hitbox.luau`) with one owner each, and one data file per character.
+- Avoid code conflicts: one folder per system (e.g. `src/shared/Knockback/`, with client- or server-only parts in `src/client/Knockback/` / `src/server/Knockback/`) with one owner each, and one data file per character.
+- Code conventions (in `CLAUDE.md`): every module starts with `--!strict`, tabs for indentation, PascalCase module/folder names. Keep game rules and math in pure modules (no Instances or services) so they can be unit-tested, and put tunable numbers in a `Config` module per system. Timing is in 60 Hz frames and distances in studs, converted to seconds only for effects and UI.
 - **Always work on your own branch — never commit directly to `main`.** Name it after the work (e.g. `knockback-system`, `char-skibidi`), then open a pull request into `main` when it's ready. **Every pull request must be approved by @2shotguns4me, who merges it — don't merge your own.** (GitHub can't enforce this on our plan, so it's on the honor system — but `.github/workflows/main-guard.yml` opens an issue alerting the owner whenever anyone else pushes to or merges into `main`.)
 
   ```bash
