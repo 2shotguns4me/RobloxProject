@@ -19,8 +19,9 @@ on a phone and still deep enough to master on a controller.
    controller and touch each get a native layout, not a port ([input-and-netcode](research/input-and-netcode.md)).
 3. **Fighting within 30 seconds.** Bounce in the first 1–3 minutes is a top Roblox ranking signal
    ([roblox-discovery](research/roblox-discovery.md)).
-4. **Fair fights, paid shortcuts and looks.** Every fighter can be earned by playing. Robux can unlock a
-   fighter sooner or buy cosmetics and crates, but never buys stats or an in-match advantage
+4. **Fair fights, paid shortcuts and looks.** Every standard fighter can be earned by playing. Robux can
+   unlock a fighter sooner or buy cosmetics and crates, but never buys stats or an in-match advantage.
+   Special fighters come only from rare crates, so they must be balanced like everyone else
    ([successful-games](research/successful-games.md)).
 5. **A roster that keeps growing.** A new fighter, event or mode every 2–4 weeks, each one a reveal moment.
 
@@ -54,9 +55,7 @@ Claude checks each one against [character-ip](research/character-ip.md) and flag
 - **Shared base movesets per archetype** (Brawlhalla's model). Each fighter's identity comes from its
   specials, look and audio. This keeps new fighters cheap, and any fighter can be reskinned if it
   ever hits an IP problem.
-- **Launch roster target:** more than 15 fighters. All 15 base fighters, plus some to earn or buy and
-  at least one special fighter for crates. The old 6–8 target came from the research and is too small
-  for a 15-fighter starter roster.
+- **Launch roster:** 8 standard fighters plus 1 special fighter (see the collection decision below).
 
 ## Core mechanics
 
@@ -126,17 +125,16 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
   rotating party mode, plus a collection layer with rarity tiers.
 - **Monetization (microtransactions):** fighters (instant unlock), skins, emotes, KO effects, loot crates
   and a VIP pass. Possibly a battle pass or subscription.
-  - Loot crates are paid random items, so Roblox requires showing the odds of every item before purchase.
   Never sell power.
+  - Loot crates are paid random items, so Roblox requires showing the odds of every item before purchase.
 
-**DECIDED:** The collection layer is fighters plus cosmetics. Every fighter can be earned by playing or
-unlocked instantly with Robux. Skins, emotes and KO effects are collectible with rarity tiers, sold
-directly and in loot crates.
-- **Starter roster:** every player starts with 15 base fighters unlocked.
-- **Loot crates:** mostly cosmetics, plus a very low chance of a special fighter. Which fighters count
-  as special is still to be decided. The odds must be shown before purchase.
-- **Still to decide:** can special fighters also be earned by playing or bought outright, or do they
-  come only from crates?
+**DECIDED:** The collection layer is fighters plus cosmetics. Skins, emotes and KO effects are
+collectible with rarity tiers, sold directly and in loot crates.
+- **Starter roster:** every player starts with 4 free fighters.
+- **Unlockable fighters:** 4 more, each earned by playing or unlocked instantly with Robux.
+- **Special fighters:** 1 at launch. Special fighters come only from the luckier (rarer) crate tier,
+  at a very low drop chance. They can't be earned or bought outright. Which fighter is special, the
+  crate tiers and the odds are still to be decided. Odds must be shown before purchase.
 
 ## Visibility and launch
 
