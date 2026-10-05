@@ -1,0 +1,50 @@
+# Alerts the repo owner when someone else changes `main`.
+# GitHub can't block this on our plan (see README → Workflow), so this
+# opens an issue assigned to the owner instead.
+name: Main guard
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  alert:
+    if: github.actor != github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          ACTOR: ${{ github.actor }}
+          SHA: ${{ github.sha }}
+          COMPARE: ${{ github.event.compare }}
+          FORCED: ${{ github.event.forced }}
+        run: |
+          pr=$(gh api "repos/$GH_REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)][0].number // empty')
+
+          if [ -n "$pr" ]; then
+            approved=$(gh api "repos/$GH_REPO/pulls/$pr/reviews" \
+              --jq "[.[] | select(.user.login == \"$OWNER\" and .state == \"APPROVED\")] | length")
+            if [ "$approved" -gt 0 ]; then status="approved by @$OWNER"; else status="**not approved** by @$OWNER"; fi
+            title="PR #$pr was merged into main by $ACTOR"
+            body="@$OWNER — @$ACTOR merged #$pr into \`main\` (it was $status). Pull requests should be merged by the owner only."
+          else
+            title="$ACTOR pushed directly to main"
+            body="@$OWNER — @$ACTOR pushed directly to \`main\` without a pull request."
+          fi
+
+          if [ "$FORCED" = "true" ]; then
+            title="$title (force push)"
+            body="$body"$'\n\n'"⚠️ This was a **force push** — commits on \`main\` may have been overwritten."
+          fi
+
+          body="$body"$'\n\n'"Changes: $COMPARE"$'\n\n'"If this was fine, just close this issue. To undo it, revert the commits on \`main\`."
+
+          gh issue create --title "$title" --body "$body" --assignee "$OWNER"

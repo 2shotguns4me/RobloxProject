@@ -71,6 +71,16 @@ Artists and builders don't need any of this — just open the shared place in St
 - **Only one person runs Rojo into the shared Team Create place**, syncing from an up-to-date `main`. Everyone else tests code in their own local copy. Multiple people syncing into the shared place overwrite each other.
 - Edit code in `src/`, never in Studio's script editor — Studio-side edits to synced scripts get overwritten.
 - Avoid code conflicts: one module per system (e.g. `Knockback.luau`, `Hitbox.luau`) with one owner each, and one data file per character.
+- **Always work on your own branch — never commit directly to `main`.** Name it after the work (e.g. `knockback-system`, `char-skibidi`), then open a pull request into `main` when it's ready. **Every pull request must be approved by @2shotguns4me, who merges it — don't merge your own.** (GitHub can't enforce this on our plan, so it's on the honor system — but `.github/workflows/main-guard.yml` opens an issue alerting the owner whenever anyone else pushes to or merges into `main`.)
+
+  ```bash
+  git checkout main
+  git pull
+  git checkout -b knockback-system
+  # ...make changes, commit...
+  git push -u origin knockback-system
+  # then open a pull request on GitHub
+  ```
+
 - Pull before you start, commit small, push often.
-- For bigger changes, use a branch and open a pull request.
 - Keep this README up to date when you change the project's layout, systems or setup. `CLAUDE.md` tells Claude Code to do this automatically.
