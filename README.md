@@ -66,7 +66,7 @@ Code finds assets by name, so these must be followed:
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
 | `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, settled team decisions (marked DECIDED), build order |
-| `docs/Testing.md` | — | **How to test:** automated checks, the Studio play-test steps and checklist, playtesting with local Claude, and how to report problems |
+| `docs/Testing.md` | — | **How to test, every time:** automated checks, the Studio play-test steps and checklist, playtesting with local Claude, and how to report problems |
 | `docs/characters/` | — | One moveset design per character, written by the team. Copy `_MovesetTemplate.md`; Claude turns each into `src/shared/Characters/<Name>.luau` |
 | `docs/research/` | — | Research behind the scope. `SUMMARY.md` has a one-paragraph abstract of each report: `successful-games.md` (what other fighters did well and badly), `game-feel.md` (hitstop, shake, sound, haptics, VFX), `input-and-netcode.md` (keyboard/controller/mobile controls, online architecture), `roblox-discovery.md` (how Roblox ranks games, launch checklist), `character-ip.md` (which characters are legally safe), `mechanics-design-prompt.md` (prior-art research on Smash mechanics plus a master prompt for writing the full mechanics spec) |
 
@@ -93,7 +93,7 @@ Code finds assets by name, so these must be followed:
 
    Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it. Hit the dummy to raise its %; the side smash launches it off the stage from about 95%.
 
-**Testing.** The full workflow is in [`docs/Testing.md`](docs/Testing.md): the play-test steps and checklist, common problems, playtesting with local Claude through the Roblox Studio connection, and how to report bugs and feel issues. Before you push, run the same checks CI runs on every pull request:
+**Testing.** Every time you test anything, follow [`docs/Testing.md`](docs/Testing.md) start to finish — it's the only testing workflow, for everyone. It covers the play-test steps and checklist, common problems, playtesting with local Claude through the Roblox Studio connection, and how to report bugs and feel issues. Before you push, run the same checks CI runs on every pull request:
 
 ```bash
 lune run tests/run          # unit tests; add a name to run only matching specs: lune run tests/run Movement
@@ -124,5 +124,5 @@ Artists and builders don't need any of this — just open the shared place in St
   ```
 
 - Pull before you start, commit small, push often.
-- Every change gets the automated checks plus a Studio play-test before it's merged ([`docs/Testing.md`](docs/Testing.md)).
+- **All testing follows [`docs/Testing.md`](docs/Testing.md)**, every time and for everyone: the automated checks plus the Studio play-test and checklist before anything is merged, reported in the format that doc describes. If the doc is wrong or missing a step, fix it in the same pull request.
 - Keep this README up to date when you change the project's layout, systems or setup. `CLAUDE.md` tells Claude Code to do this automatically.

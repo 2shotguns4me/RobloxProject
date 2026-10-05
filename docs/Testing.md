@@ -1,5 +1,11 @@
 # Testing workflow
 
+**This is the one way we test.** Every time anyone tests anything (a new feature, a bug fix, a tuning
+tweak, someone else's pull request) they follow this doc, start to finish: the automated checks, then the
+Studio play-test steps and checklist, then a report in the format below. No ad-hoc setups, so results are
+comparable and nobody hits a problem that's already solved here. If a step is wrong or missing, fix this
+doc in the same pull request.
+
 Two kinds of testing, and every change gets both:
 
 1. **Automated checks** — unit tests, format, lint and a build. Run anywhere, including CI and cloud Claude sessions.

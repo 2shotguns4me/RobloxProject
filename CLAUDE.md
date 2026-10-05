@@ -47,7 +47,14 @@ and flag any character that's risky to use.
 
 ## Testing
 
-Follow `docs/Testing.md`, and keep it current when controls, systems, config locations or setup change.
+`docs/Testing.md` is the only testing workflow. Use it every time testing comes up, and keep it current
+when controls, systems, config locations or setup change.
+
+- **When the user wants to test something** (asks how to test, wants to try a change, or a pull request is
+  ready to merge), walk them through `docs/Testing.md` step by step: the checks, the play-test steps, the
+  checklist items that the change affects, then the report format. Don't improvise a different setup.
+- **When a test turns up a problem the doc doesn't cover**, fix the problem and add it to the doc's
+  "Common problems" table in the same pull request.
 
 - **Before every push:** run `lune run tests/run`, `stylua src tests` (then `stylua --check src tests`),
   `selene src tests` and `rojo build -o build.rbxl`. Add or update specs in `tests/<System>/` for any change to
