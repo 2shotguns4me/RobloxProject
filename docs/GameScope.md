@@ -101,11 +101,12 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
 
 - **Input layer:** Roblox's Input Action System. Each device adapter feeds one per-frame "intent"
   record, which gameplay code and the network both read.
-- **Keyboard:** WASD, J attack, K special, L smash, Shift shield, U grab.
-- **Controller:** X attack, B special, right stick for smashes, triggers to shield, bumpers to grab.
+- **Keyboard:** WASD move, Space jump, J attack, K special, L smash, Shift shield, U grab.
+- **Controller:** A or Y jump, X attack, B special, right stick for smashes, triggers to shield,
+  bumpers to grab.
 - **Mobile:** floating joystick plus Attack, Special, Jump, Shield and Grab buttons. Swipe from Attack
   for a smash, drag from Special to aim. Every button is movable and resizable.
-- **Tap-jump** (jump by pushing up) is off by default.
+- **Tap-jump** (jump by pushing up: W or the stick) is off by default and can be turned on in settings.
 - **Netcode:**
   - Fixed-step 60 Hz deterministic simulation.
   - The client predicts its own fighter.
