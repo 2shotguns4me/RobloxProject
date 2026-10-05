@@ -66,6 +66,7 @@ Code finds assets by name, so these must be followed:
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
 | `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, settled team decisions (marked DECIDED), build order |
+| `docs/Testing.md` | — | **How to test:** automated checks, the Studio play-test steps and checklist, playtesting with local Claude, and how to report problems |
 | `docs/characters/` | — | One moveset design per character, written by the team. Copy `_MovesetTemplate.md`; Claude turns each into `src/shared/Characters/<Name>.luau` |
 | `docs/research/` | — | Research behind the scope. `SUMMARY.md` has a one-paragraph abstract of each report: `successful-games.md` (what other fighters did well and badly), `game-feel.md` (hitstop, shake, sound, haptics, VFX), `input-and-netcode.md` (keyboard/controller/mobile controls, online architecture), `roblox-discovery.md` (how Roblox ranks games, launch checklist), `character-ip.md` (which characters are legally safe), `mechanics-design-prompt.md` (prior-art research on Smash mechanics plus a master prompt for writing the full mechanics spec) |
 
@@ -79,7 +80,7 @@ Code finds assets by name, so these must be followed:
    rojo serve
    ```
 
-4. Open a **local copy** of the place (open the Team Create place, then **File → Save to File** — `.rbxl` files are gitignored). Open the **Rojo** plugin tab and click **Connect**. Edits to files in `src/` now sync live into your copy for testing.
+4. Open a **local copy** of the place (open the Team Create place, then **File → Save to File** — `.rbxl` files are gitignored). Open the **Rojo** plugin tab and click **Connect** — while the game is stopped, not during Play. Edits to files in `src/` now sync live into your copy for testing.
 
 5. Press **Play** in Studio. You spawn on a grey test stage next to an orange training dummy.
 
@@ -92,12 +93,13 @@ Code finds assets by name, so these must be followed:
 
    Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it. Hit the dummy to raise its %; the side smash launches it off the stage from about 95%.
 
-**Checks before you push** (CI runs the same ones on every pull request). From the repo folder:
+**Testing.** The full workflow is in [`docs/Testing.md`](docs/Testing.md): the play-test steps and checklist, common problems, playtesting with local Claude through the Roblox Studio connection, and how to report bugs and feel issues. Before you push, run the same checks CI runs on every pull request:
 
 ```bash
 lune run tests/run          # unit tests; add a name to run only matching specs: lune run tests/run Movement
 stylua src tests            # format (CI runs stylua --check)
 selene src tests            # lint
+rojo build -o build.rbxl    # the project builds
 ```
 
 Game rules live in pure modules (no Instances), so their tests run in Lune without Studio. Add a test by creating `tests/<System>/<Module>.spec.luau` that returns `function(t)` (see `tests/Example.spec.luau`); the runner finds it automatically.
@@ -122,4 +124,5 @@ Artists and builders don't need any of this — just open the shared place in St
   ```
 
 - Pull before you start, commit small, push often.
+- Every change gets the automated checks plus a Studio play-test before it's merged ([`docs/Testing.md`](docs/Testing.md)).
 - Keep this README up to date when you change the project's layout, systems or setup. `CLAUDE.md` tells Claude Code to do this automatically.

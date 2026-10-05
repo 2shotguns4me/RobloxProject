@@ -45,6 +45,23 @@ and flag any character that's risky to use.
   (effects, UI).
 - Design references: `docs/GameScope.md` and `docs/research/`.
 
+## Testing
+
+Follow `docs/Testing.md`, and keep it current when controls, systems, config locations or setup change.
+
+- **Before every push:** run `lune run tests/run`, `stylua src tests` (then `stylua --check src tests`),
+  `selene src tests` and `rojo build -o build.rbxl`. Add or update specs in `tests/<System>/` for any change to
+  a pure module, and for a bug fix add a test that fails without the fix. If a tool can't run in your
+  environment (selene needs Roblox's API dump), say so in the pull request and rely on CI.
+- **Cloud sessions can't reach Roblox Studio.** Never claim a change works in-game until someone has
+  play-tested it. In the pull request, list what to check in Studio, and point the user at the checklist in
+  `docs/Testing.md`.
+- **Local sessions with the `Roblox_Studio` MCP server** may start a Play test and read the Output window.
+  Report errors and results; don't change code during a play-test unless the user asks, so changes stay in
+  one place.
+- **Feel feedback** ("too floaty", "hits too weak") is a tuning change: adjust the `Config` module or move
+  data named in `docs/Testing.md`, explain what changed in plain words, and ask for a re-test.
+
 ## Notes
 
 - Code lives in `src/` and is synced into Studio by Rojo; don't edit synced scripts in Studio's script editor.
