@@ -1,0 +1,46 @@
+--!strict
+local Envelope = require("../../src/shared/Feel/Envelope")
+
+return function(t)
+	t.test("punch envelope: 0 -> 1 -> hold -> 0", function()
+		t.eq(Envelope.punch(-0.1, 0.08, 0.4, 0.35), 0)
+		t.eq(Envelope.punch(0, 0.08, 0.4, 0.35), 0)
+		t.truthy(Envelope.punch(0.04, 0.08, 0.4, 0.35) > 0.5, "ease-out is past half at half time")
+		t.eq(Envelope.punch(0.1, 0.08, 0.4, 0.35), 1)
+		t.eq(Envelope.punch(0.47, 0.08, 0.4, 0.35), 1)
+		t.near(Envelope.punch(0.48 + 0.175, 0.08, 0.4, 0.35), 0.5, 1e-9)
+		t.eq(Envelope.punch(0.83, 0.08, 0.4, 0.35), 0)
+		t.near(Envelope.punchLength(0.08, 0.4, 0.35), 0.83, 1e-12)
+	end)
+
+	t.test("punch with no hold goes straight to release", function()
+		t.near(Envelope.punch(0.06, 0.06, 0, 0.25), 1, 1e-9)
+		t.truthy(Envelope.punch(0.2, 0.06, 0, 0.25) < 1)
+	end)
+
+	t.test("victim shake alternates each frame and decays", function()
+		local amp, dur = 0.35, 10 / 60
+		local x0, y0 = Envelope.victimShake(amp, 0, dur, false)
+		t.near(x0, amp, 1e-9)
+		t.eq(y0, 0, "grounded shake is horizontal")
+		local x1 = Envelope.victimShake(amp, 1.5 / 60, dur, false)
+		t.truthy(x1 < 0, "sign flips on the next frame")
+		local x8 = Envelope.victimShake(amp, 8.5 / 60, dur, false)
+		t.truthy(math.abs(x8) < math.abs(x1), "decays toward the end")
+		local ex, ey = Envelope.victimShake(amp, dur, dur, false)
+		t.eq(ex, 0)
+		t.eq(ey, 0)
+	end)
+
+	t.test("airborne victim shakes vertically", function()
+		local x, y = Envelope.victimShake(0.2, 0, 0.1, true)
+		t.eq(x, 0)
+		t.near(y, 0.2, 1e-9)
+	end)
+
+	t.test("zero duration means no shake", function()
+		local x, y = Envelope.victimShake(1, 0, 0, false)
+		t.eq(x, 0)
+		t.eq(y, 0)
+	end)
+end
