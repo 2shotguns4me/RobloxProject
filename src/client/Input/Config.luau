@@ -1,6 +1,6 @@
 --!strict
 -- Default bindings and touch layout (docs/GameScope.md, "Controls and netcode").
--- Remapping comes later; attack, special, shield and grab are added with the hit pipeline.
+-- Remapping comes later; special, shield and grab come with their systems.
 
 return {
 	Keyboard = {
@@ -9,10 +9,15 @@ return {
 		Up = { Enum.KeyCode.W, Enum.KeyCode.Up },
 		Down = { Enum.KeyCode.S, Enum.KeyCode.Down },
 		Jump = { Enum.KeyCode.Space },
+		Attack = { Enum.KeyCode.J },
+		Smash = { Enum.KeyCode.L }, -- aims with A/D, otherwise the way you face
 	},
 
 	Gamepad = {
 		Jump = { Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonY },
+		Attack = { Enum.KeyCode.ButtonX },
+		-- Flicking the right stick past this tilt is a smash in that direction.
+		SmashStickThreshold = 0.7,
 	},
 
 	Touch = {
@@ -21,5 +26,9 @@ return {
 		JoystickKnobSize = 60,
 		JumpButtonSize = 110,
 		JumpButtonPosition = UDim2.new(1, -150, 1, -150), -- top-left corner of the button
+		AttackButtonSize = 120,
+		AttackButtonPosition = UDim2.new(1, -290, 1, -170),
+		-- Tap Attack to attack; swipe off it sideways at least this many pixels for a smash.
+		SmashSwipePixels = 40,
 	},
 }

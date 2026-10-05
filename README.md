@@ -50,11 +50,14 @@ Code finds assets by name, so these must be followed:
 | `src/shared/Characters` | `ReplicatedStorage.Shared.Characters` | One data file per character: stats, animation IDs, moves. Copy `_Template.luau` to add one |
 | `src/shared/Movement` | `ReplicatedStorage.Shared.Movement` | Pure 2D movement rules (run, jumps, short hop, double jump, fast-fall, landing lag, pass-through platforms) and their tuning in `Config.luau` |
 | `src/shared/Stage` | `ReplicatedStorage.Shared.Stage` | `StageGeometry`: reads tagged stage parts into the rects movement collides with |
+| `src/shared/Combat` | `ReplicatedStorage.Shared.Combat` | Pure fighting rules: `Fighter` (attacks with frame data, damage %, hitstun, hitstop, attack buffer), `Combat` (hit detection between fighters, blast-zone KOs), `Knockback` (Smash-style formula). Tuning in `Config.luau`. `TestMoveset` is a **placeholder** jab/tilt/smash/neutral-air until the first fighter design exists |
 | `src/shared/Feel` | `ReplicatedStorage.Shared.Feel` | Pure game-feel math: hit tiers and the hitstop formula (`HitTiers`), KO slow-mo requests (`TimeScale`), effect envelopes, a small `Signal` |
 | `src/server` | `ServerScriptService.Server` | Server logic: damage, knockback, hitboxes, stocks, match flow. `TestStage/` builds a test stage when the place has none |
-| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects. `Input/` turns keyboard, controller and touch into one intent per frame; `Fighter/` drives your character with the movement rules at 60 Hz |
+| `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects. `Input/` turns keyboard, controller and touch into one intent per frame; `Fighter/` runs the local 60 Hz simulation (your fighter plus the training dummy) and plays the Feel effects on hits, KOs, jumps and landings |
 | `src/client/Camera` | `…Client.Camera` | `FightCamera`: side-on camera that frames every fighter Smash-style, with shake and FOV punches. Framing math is in `Framing` |
 | `src/client/Feel` | `…Client.Feel` | `Feel`: one entry point for hit/KO/movement juice (camera shake, haptics, layered impact audio, hit flash, sparks, flash limiter). Cosmetic only; tuning in `Config.luau` |
+| `src/client/Training` | `…Client.Training` | Training dummy: an orange block you can hit and launch. Client-only; switch it off in `Config.luau` |
+| `src/client/Hud` | `…Client.Hud` | Placeholder damage % labels over fighters, until the real HUD is built in Studio |
 | `src/client/Settings` | `…Client.Settings` | Player settings store with presets (Default / Competitive): shake, flash, rumble, slow-mo toggles |
 | `src/client/Dev` | `…Client.Dev` | `FeelHarness`: Studio-only preview of hit effects on two placeholder blocks (keys 1–9). Off by default; turn it on with a boolean Workspace attribute `FeelHarness` = true |
 | `tests/` | — (not synced) | Unit tests (`*.spec.luau`, one folder per system), run with Lune outside Studio (see Setup) |
@@ -78,7 +81,16 @@ Code finds assets by name, so these must be followed:
 
 4. Open a **local copy** of the place (open the Team Create place, then **File → Save to File** — `.rbxl` files are gitignored). Open the **Rojo** plugin tab and click **Connect**. Edits to files in `src/` now sync live into your copy for testing.
 
-5. Press **Play** in Studio to try the movement: WASD or arrow keys and Space, a controller (stick or D-pad, A or Y to jump), or the on-screen joystick and Jump button on touch. Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it.
+5. Press **Play** in Studio. You spawn on a grey test stage next to an orange training dummy.
+
+   | | Keyboard | Controller | Touch |
+   |---|---|---|---|
+   | Move | WASD / arrow keys | Left stick / D-pad | Joystick (left half of the screen) |
+   | Jump | Space | A or Y | Jump button |
+   | Attack | J (jab; tilt while holding A/D; neutral air in the air) | X | Tap Attack |
+   | Smash | L (aims with A/D) | Flick the right stick | Swipe sideways off Attack |
+
+   Tap jump for a short hop, press down while falling to fast-fall, and press down on a thin platform to drop through it. Hit the dummy to raise its %; the side smash launches it off the stage from about 95%.
 
 **Checks before you push** (CI runs the same ones on every pull request). From the repo folder:
 

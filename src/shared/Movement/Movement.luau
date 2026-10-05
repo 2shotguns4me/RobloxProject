@@ -73,6 +73,7 @@ export type State = {
 	ShortHop: boolean, -- jump was released during jump squat
 	DropThrough: number, -- frames left ignoring pass-through platforms
 	PrevMoveY: number,
+	LandingLagFrames: number, -- length of the current landing; aerial attacks set their own
 }
 
 local EPSILON = 1e-4
@@ -97,7 +98,19 @@ function Movement.new(config: Config, x: number, y: number): State
 		ShortHop = false,
 		DropThrough = 0,
 		PrevMoveY = 0,
+		LandingLagFrames = config.LandingLag,
 	}
+end
+
+-- Sends the fighter flying (knockback): airborne with the given velocity, studs per frame.
+function Movement.launch(state: State, vx: number, vy: number): State
+	local s = table.clone(state)
+	s.VX = vx
+	s.VY = vy
+	s.FastFalling = false
+	s.Mode = "Air"
+	s.ModeFrame = 0
+	return s
 end
 
 -- Launch speed that peaks at `height` under the config's gravity.
@@ -144,6 +157,7 @@ local function land(s: State, config: Config, top: number)
 	s.VY = 0
 	s.AirJumpsLeft = config.AirJumps
 	s.FastFalling = false
+	s.LandingLagFrames = config.LandingLag
 	if config.LandingLag > 0 then
 		setMode(s, "Landing")
 	else
@@ -281,7 +295,7 @@ function Movement.step(state: State, intent: Intent, config: Config, stage: Stag
 		end
 	elseif s.Mode == "Landing" then
 		s.VX = approach(s.VX, 0, config.GroundFriction)
-		if s.ModeFrame >= config.LandingLag then
+		if s.ModeFrame >= s.LandingLagFrames then
 			setMode(s, "Ground")
 		end
 	end

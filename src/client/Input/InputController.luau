@@ -12,12 +12,16 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local Movement = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Movement"):WaitForChild("Movement"))
+local Fighter = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Combat"):WaitForChild("Fighter"))
 local Config = require("./Config")
 
 local InputController = {}
 
 local jumpPresses = 0 -- jump presses not yet handed to the simulation
+local attackPresses = 0
+local smashPresses = 0
+local smashX = 0 -- aim of the most recent smash press: -1, 0 (facing) or 1
+local smashStickOut = false -- right stick is past the smash threshold
 local gamepadStick = Vector2.zero
 local touchStick = Vector2.zero
 local touchJumpHeld = false
@@ -72,6 +76,30 @@ local function disableDefaultControls()
 	end)
 end
 
+local function keyboardX(): number
+	return axis(anyKeyDown(Config.Keyboard.Left), anyKeyDown(Config.Keyboard.Right))
+end
+
+local function pressSmash(direction: number)
+	smashPresses += 1
+	smashX = direction
+end
+
+local function roundButton(name: string, size: number, position: UDim2, parent: Instance): TextButton
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Size = UDim2.fromOffset(size, size)
+	button.Position = position
+	button.BackgroundColor3 = Color3.new(1, 1, 1)
+	button.BackgroundTransparency = 0.5
+	button.Text = name
+	button.TextScaled = true
+	button.AutoButtonColor = false
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0.5, 0)
+	button.Parent = parent
+	return button
+end
+
 local function buildTouchControls()
 	local touch = Config.Touch
 	local gui = Instance.new("ScreenGui")
@@ -99,17 +127,40 @@ local function buildTouchControls()
 	Instance.new("UICorner", knob).CornerRadius = UDim.new(0.5, 0)
 	knob.Parent = base
 
-	local jumpButton = Instance.new("TextButton")
-	jumpButton.Name = "Jump"
-	jumpButton.Size = UDim2.fromOffset(touch.JumpButtonSize, touch.JumpButtonSize)
-	jumpButton.Position = touch.JumpButtonPosition
-	jumpButton.BackgroundColor3 = Color3.new(1, 1, 1)
-	jumpButton.BackgroundTransparency = 0.5
-	jumpButton.Text = "Jump"
-	jumpButton.TextScaled = true
-	jumpButton.AutoButtonColor = false
-	Instance.new("UICorner", jumpButton).CornerRadius = UDim.new(0.5, 0)
-	jumpButton.Parent = gui
+	local jumpButton = roundButton("Jump", touch.JumpButtonSize, touch.JumpButtonPosition, gui)
+	local attackButton = roundButton("Attack", touch.AttackButtonSize, touch.AttackButtonPosition, gui)
+
+	-- Attack: a tap attacks when the thumb lifts; swiping sideways off the button smashes
+	-- the moment the swipe is long enough.
+	local attackTouch: InputObject? = nil
+	local attackStart = Vector2.zero
+	local swiped = false
+	attackButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch and not attackTouch then
+			attackTouch = input
+			attackStart = Vector2.new(input.Position.X, input.Position.Y)
+			swiped = false
+		end
+	end)
+	UserInputService.TouchMoved:Connect(function(input: InputObject)
+		if input ~= attackTouch or swiped then
+			return
+		end
+		local dx = input.Position.X - attackStart.X
+		if math.abs(dx) >= touch.SmashSwipePixels then
+			swiped = true
+			pressSmash(math.sign(dx))
+		end
+	end)
+	UserInputService.TouchEnded:Connect(function(input: InputObject)
+		if input ~= attackTouch then
+			return
+		end
+		attackTouch = nil
+		if not swiped then
+			attackPresses += 1
+		end
+	end)
 
 	jumpButton.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.Touch then
@@ -175,14 +226,27 @@ function InputController.start()
 		if gameProcessed then
 			return
 		end
-		if table.find(Config.Keyboard.Jump, input.KeyCode) or table.find(Config.Gamepad.Jump, input.KeyCode) then
+		local key = input.KeyCode
+		if table.find(Config.Keyboard.Jump, key) or table.find(Config.Gamepad.Jump, key) then
 			jumpPresses += 1
+		elseif table.find(Config.Keyboard.Attack, key) or table.find(Config.Gamepad.Attack, key) then
+			attackPresses += 1
+		elseif table.find(Config.Keyboard.Smash, key) then
+			pressSmash(keyboardX())
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Thumbstick1 then
 			gamepadStick = Vector2.new(input.Position.X, input.Position.Y)
+		elseif input.KeyCode == Enum.KeyCode.Thumbstick2 then
+			local stick = Vector2.new(input.Position.X, input.Position.Y)
+			local out = stick.Magnitude >= Config.Gamepad.SmashStickThreshold
+			if out and not smashStickOut then
+				-- Mostly sideways flicks aim the smash; up or down flicks use facing for now.
+				pressSmash(if math.abs(stick.X) >= math.abs(stick.Y) then math.sign(stick.X) else 0)
+			end
+			smashStickOut = out
 		end
 	end)
 
@@ -198,11 +262,13 @@ end
 -- Forget presses made while there was no fighter to use them (e.g. while respawning).
 function InputController.clearPresses()
 	jumpPresses = 0
+	attackPresses = 0
+	smashPresses = 0
 end
 
 -- Call once per simulation frame. Each press is handed out exactly once, so a tap
 -- shorter than a frame still registers.
-function InputController.read(): Movement.Intent
+function InputController.read(): Fighter.Intent
 	local keys = Config.Keyboard
 	local pad = Enum.UserInputType.Gamepad1
 	local dpadX = axis(
@@ -216,7 +282,7 @@ function InputController.read(): Movement.Intent
 
 	-- Ignore the keyboard while typing in chat or another text box.
 	local typing = UserInputService:GetFocusedTextBox() ~= nil
-	local keyX = if typing then 0 else axis(anyKeyDown(keys.Left), anyKeyDown(keys.Right))
+	local keyX = if typing then 0 else keyboardX()
 	local keyY = if typing then 0 else axis(anyKeyDown(keys.Down), anyKeyDown(keys.Up))
 	local keyJump = not typing and anyKeyDown(keys.Jump)
 
@@ -224,12 +290,23 @@ function InputController.read(): Movement.Intent
 	if jumpPressed then
 		jumpPresses -= 1
 	end
+	local attackPressed = attackPresses > 0
+	if attackPressed then
+		attackPresses -= 1
+	end
+	local smashPressed = smashPresses > 0
+	if smashPressed then
+		smashPresses -= 1
+	end
 
 	return {
 		MoveX = strongest({ keyX, dpadX, gamepadStick.X, touchStick.X }),
 		MoveY = strongest({ keyY, dpadY, gamepadStick.Y, touchStick.Y }),
 		JumpHeld = keyJump or anyGamepadButtonDown(Config.Gamepad.Jump) or touchJumpHeld,
 		JumpPressed = jumpPressed,
+		AttackPressed = attackPressed,
+		SmashPressed = smashPressed,
+		SmashX = smashX,
 	}
 end
 
