@@ -1,1 +1,4 @@
-print("Hello world, from server!")
+--!strict
+local TestStage = require(script.TestStage.TestStage)
+
+TestStage.buildIfMissing()
