@@ -54,7 +54,9 @@ Claude checks each one against [character-ip](research/character-ip.md) and flag
 - **Shared base movesets per archetype** (Brawlhalla's model). Each fighter's identity comes from its
   specials, look and audio. This keeps new fighters cheap, and any fighter can be reskinned if it
   ever hits an IP problem.
-- **Launch roster target:** 6–8 fighters.
+- **Launch roster target:** more than 15 fighters. All 15 base fighters, plus some to earn or buy and
+  at least one special fighter for crates. The old 6–8 target came from the research and is too small
+  for a 15-fighter starter roster.
 
 ## Core mechanics
 
@@ -130,8 +132,11 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
 **DECIDED:** The collection layer is fighters plus cosmetics. Every fighter can be earned by playing or
 unlocked instantly with Robux. Skins, emotes and KO effects are collectible with rarity tiers, sold
 directly and in loot crates.
-Still to set: whether crates can also contain fighters, or only cosmetics.
-Still to set: how many fighters new players start with (proposal: enough to pick from in the first match).
+- **Starter roster:** every player starts with 15 base fighters unlocked.
+- **Loot crates:** mostly cosmetics, plus a very low chance of a special fighter. Which fighters count
+  as special is still to be decided. The odds must be shown before purchase.
+- **Still to decide:** can special fighters also be earned by playing or bought outright, or do they
+  come only from crates?
 
 ## Visibility and launch
 
