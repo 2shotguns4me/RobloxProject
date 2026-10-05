@@ -52,10 +52,11 @@ Claude checks each one against [character-ip](research/character-ip.md) and flag
 ### Roster structure
 
 - **Archetypes:** all-rounder, rushdown, heavyweight, zoner, floaty. Grappler and sword come later.
+  **DECIDED:** the launch mix isn't fixed. Each fighter's archetype comes from the team's design.
 - **Shared base movesets per archetype** (Brawlhalla's model). Each fighter's identity comes from its
   specials, look and audio. This keeps new fighters cheap, and any fighter can be reskinned if it
   ever hits an IP problem.
-- **Launch roster:** 8 standard fighters plus 1 special fighter (see the collection decision below).
+- **Launch roster:** 9 fighters: 8 standard plus 1 special (see the collection decision below).
 
 ## Core mechanics
 
@@ -120,18 +121,22 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
   - 1v1
   - a 60–90 s interactive tutorial that ends in a bot match
   - a bot practice room
-- **Ranked** unlocks after some play.
+- **Ranked** unlocks at account level 10 (**DECIDED**).
 - **Retention:** Roblox now measures retention over 28 days. Plan daily quests, weekly events and a
   rotating party mode, plus a collection layer with rarity tiers.
-- **Monetization (microtransactions):** fighters (instant unlock), skins, emotes, KO effects, loot crates
-  and a VIP pass. Possibly a battle pass or subscription.
-  Never sell power.
+- **Monetization (microtransactions):** fighters (instant unlock), skins, emotes, KO effects, loot crates,
+  a VIP pass and a battle pass. No subscription for now. Never sell power.
+  - **Battle pass (DECIDED):** a free track and a paid track. Everyone progresses through the pass by
+    playing and earns the free rewards. Buying the paid track unlocks up to 25 extra cosmetics that the
+    free tier can't get (25 is a placeholder).
   - Loot crates are paid random items, so Roblox requires showing the odds of every item before purchase.
 
 **DECIDED:** The collection layer is fighters plus cosmetics. Skins, emotes and KO effects are
 collectible with rarity tiers, sold directly and in loot crates.
 - **Starter roster:** every player starts with 4 free fighters.
-- **Unlockable fighters:** 4 more, each earned by playing or unlocked instantly with Robux.
+- **Unlockable fighters:** 4 more, each bought with soft currency or unlocked instantly with Robux.
+- **Soft currency:** coins, earned from matches, daily quests and level-ups. Spent on fighters and
+  some cosmetics. Prices and payout rates are still to be tuned.
 - **Special fighters:** 1 at launch. Special fighters come only from the luckier (rarer) crate tier,
   at a very low drop chance. They can't be earned or bought outright. Which fighter is special, the
   crate tiers and the odds are still to be decided. Odds must be shown before purchase.
