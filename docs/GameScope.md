@@ -19,7 +19,8 @@ on a phone and still deep enough to master on a controller.
    controller and touch each get a native layout, not a port ([input-and-netcode](research/input-and-netcode.md)).
 3. **Fighting within 30 seconds.** Bounce in the first 1–3 minutes is a top Roblox ranking signal
    ([roblox-discovery](research/roblox-discovery.md)).
-4. **Fair fights, paid looks.** Every fighter is earned by playing, never bought, and money only buys cosmetics
+4. **Fair fights, paid shortcuts and looks.** Every fighter can be earned by playing. Robux can unlock a
+   fighter sooner or buy cosmetics and crates, but never buys stats or an in-match advantage
    ([successful-games](research/successful-games.md)).
 5. **A roster that keeps growing.** A new fighter, event or mode every 2–4 weeks, each one a reveal moment.
 
@@ -121,11 +122,15 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
 - **Ranked** unlocks after some play.
 - **Retention:** Roblox now measures retention over 28 days. Plan daily quests, weekly events and a
   rotating party mode, plus a collection layer with rarity tiers.
-- **Monetization:** skins, emotes, KO effects and a VIP pass. Possibly a battle pass or subscription.
+- **Monetization (microtransactions):** fighters (instant unlock), skins, emotes, KO effects, loot crates
+  and a VIP pass. Possibly a battle pass or subscription.
+  - Loot crates are paid random items, so Roblox requires showing the odds of every item before purchase.
   Never sell power.
 
-**DECIDED:** The collection layer is fighters plus cosmetics. Fighters unlock by playing and are never
-sold for Robux or put in random rolls. Skins, emotes and KO effects are collectible with rarity tiers.
+**DECIDED:** The collection layer is fighters plus cosmetics. Every fighter can be earned by playing or
+unlocked instantly with Robux. Skins, emotes and KO effects are collectible with rarity tiers, sold
+directly and in loot crates.
+Still to set: whether crates can also contain fighters, or only cosmetics.
 Still to set: how many fighters new players start with (proposal: enough to pick from in the first match).
 
 ## Visibility and launch
