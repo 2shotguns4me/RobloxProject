@@ -1,8 +1,8 @@
 --!strict
--- Unit tests for src/shared/Movement. Run with: luau tests/run.luau
+-- Unit tests for src/shared/Movement. Run with: lune run tests/run Movement
 
-local Movement = require("../src/shared/Movement/Movement")
-local Config = require("../src/shared/Movement/Config")
+local Movement = require("../../src/shared/Movement/Movement")
+local Config = require("../../src/shared/Movement/Config")
 
 type State = Movement.State
 type Intent = Movement.Intent
@@ -285,4 +285,13 @@ tests["step does not change the state passed in"] = function()
 	assert(s.X == x and s.VX == 0)
 end
 
-return tests
+return function(t)
+	local names = {}
+	for name in tests do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in names do
+		t.test(name, tests[name])
+	end
+end

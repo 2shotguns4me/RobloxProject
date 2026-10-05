@@ -14,7 +14,7 @@
 
 local CollectionService = game:GetService("CollectionService")
 
-local Movement = require(script.Parent.Parent.Movement.Movement)
+local Movement = require("../Movement/Movement")
 
 local StageGeometry = {}
 

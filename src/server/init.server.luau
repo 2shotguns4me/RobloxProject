@@ -1,4 +1,4 @@
 --!strict
-local TestStage = require(script.TestStage.TestStage)
+local TestStage = require("@self/TestStage/TestStage")
 
 TestStage.buildIfMissing()
