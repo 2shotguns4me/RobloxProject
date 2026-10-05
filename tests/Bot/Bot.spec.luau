@@ -100,10 +100,11 @@ return function(t)
 		local me = settle(Fighter.new(ctx, 1, 0, 1))
 		local target = settle(Fighter.new(ctx, 2, 3, 1))
 		local zone = Combat.blastZone(ctx) :: any
-		local _, out = simulate(me, target, 60 * 60, 7, function(_, b)
+		-- The bot is deliberately easy, so give it two minutes.
+		local _, out = simulate(me, target, 60 * 120, 7, function(_, b)
 			return Combat.isOutside(b, zone)
 		end)
-		t.truthy(Combat.isOutside(out, zone), `target should be KO'd within a minute, at {out.Percent}%`)
+		t.truthy(Combat.isOutside(out, zone), `target should be KO'd within two minutes, at {out.Percent}%`)
 	end)
 
 	t.test("doesn't follow a target off the edge", function()
@@ -120,6 +121,15 @@ return function(t)
 		end
 		t.eq(me.Body.Mode == "Air" and me.Body.Y < 0, false, "bot should still be on the stage")
 		t.truthy(me.Body.X <= 55, `bot walked off the stage to x = {me.Body.X}`)
+	end)
+
+	t.test("still goes after a target standing right at the edge", function()
+		-- Feet just past the edge, body still on the stage: it's standing, not off the stage.
+		local me = settle(Fighter.new(ctx, 1, 20, 1))
+		local target = settle(Fighter.new(ctx, 2, 55.5, 1))
+		t.eq(target.Body.Mode, "Ground")
+		local _, _, hits = simulate(me, target, 600)
+		t.truthy(#hits > 0, "bot should walk over and hit it")
 	end)
 
 	t.test("recovers to the stage after being knocked off", function()

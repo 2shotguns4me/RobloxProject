@@ -82,15 +82,24 @@ local function mainStage(stage: Movement.Stage): Movement.Rect?
 	return best
 end
 
-local function isOffstage(body: Movement.State, stage: Movement.Rect): boolean
-	return body.X < stage.MinX or body.X > stage.MaxX or body.Y < stage.MaxY - 0.5
+-- Off the stage: below its top, or too far out to be standing on it. A fighter's feet can
+-- be past the edge while its body still overlaps the stage, so allow its half-width.
+local function isOffstage(body: Movement.State, stage: Movement.Rect, halfWidth: number): boolean
+	return body.X < stage.MinX - halfWidth or body.X > stage.MaxX + halfWidth or body.Y < stage.MaxY - 0.5
 end
 
 local function sign(x: number): number
 	return if x > 0 then 1 elseif x < 0 then -1 else 0
 end
 
-local function plan(b: State, me: Fighter.State, target: Fighter.State, stage: Movement.Rect?, cfg: Config)
+local function plan(
+	b: State,
+	me: Fighter.State,
+	target: Fighter.State,
+	stage: Movement.Rect?,
+	halfWidth: number,
+	cfg: Config
+)
 	local roll = nextRandom(b)
 	b.Wait = cfg.MinDecisionFrames + math.floor(roll * (cfg.MaxDecisionFrames - cfg.MinDecisionFrames + 1))
 	b.MoveX = 0
@@ -127,7 +136,7 @@ local function plan(b: State, me: Fighter.State, target: Fighter.State, stage: M
 	end
 
 	-- Walk towards the target, unless it's off the stage: wait at the edge instead.
-	if stage and isOffstage(target.Body, stage) then
+	if stage and isOffstage(target.Body, stage, halfWidth) then
 		b.MoveX = 0
 	else
 		b.MoveX = towards
@@ -164,7 +173,7 @@ function Bot.decide(
 	local stage = mainStage(ctx.Stage)
 
 	-- Recovery: head back to the stage and double-jump once falling below its top.
-	if stage and isOffstage(body, stage) then
+	if stage and isOffstage(body, stage, ctx.Movement.BodyHalfWidth) then
 		local centre = (stage.MinX + stage.MaxX) / 2
 		intent.MoveX = sign(centre - body.X)
 		local belowTop = body.Y < stage.MaxY
@@ -179,7 +188,7 @@ function Bot.decide(
 
 	b.Wait -= 1
 	if b.Wait <= 0 and not b.PendingAttack and not b.PendingJump and b.AerialIn == 0 then
-		plan(b, me, target, stage, cfg)
+		plan(b, me, target, stage, ctx.Movement.BodyHalfWidth, cfg)
 	end
 
 	-- Never walk off the edge on purpose.
