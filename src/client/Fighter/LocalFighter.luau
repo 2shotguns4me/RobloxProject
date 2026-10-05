@@ -1,6 +1,7 @@
 --!strict
 --[[
-	Runs the local fixed-step 60 Hz simulation: your fighter plus, for now, a training dummy.
+	Runs the local fixed-step 60 Hz simulation: your fighter plus, for now, a training opponent
+	(a bot that fights back, or a dummy that stands still; see Training/Config).
 	Each frame it steps both with the pure Combat rules, resolves hits and blast-zone KOs,
 	then draws the result: your character's root pinned to the 2.5D plane, the dummy, and
 	the Feel effects (hitstop shake, sparks, sound, rumble, KO bursts, jump and land dust).
@@ -15,6 +16,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local BotFolder = Shared:WaitForChild("Bot")
+local Bot = require(BotFolder:WaitForChild("Bot"))
+local BotConfig = require(BotFolder:WaitForChild("Config"))
 local CombatFolder = Shared:WaitForChild("Combat")
 local Combat = require(CombatFolder:WaitForChild("Combat"))
 local CombatConfig = require(CombatFolder:WaitForChild("Config"))
@@ -49,6 +53,7 @@ local focusCallbacks: { ({ Vector3 }) -> () } = {}
 -- The dummy outlives your character, so it's kept here rather than per character.
 local dummy: Fighter.State? = nil
 local dummyView: TrainingDummy.View? = nil
+local dummyBot: Bot.State = Bot.new(os.time())
 
 local function spawnPoint(): (number, number)
 	local x, y = StageGeometry.spawnPoint()
@@ -157,7 +162,11 @@ local function onCharacter(character: Model)
 		if not d then
 			return
 		end
-		d = Fighter.step(d, Fighter.neutralIntent(), ctx)
+		local dummyIntent = Fighter.neutralIntent()
+		if TrainingConfig.Opponent == "Bot" then
+			dummyIntent, dummyBot = Bot.decide(dummyBot, d, me, ctx, BotConfig)
+		end
+		d = Fighter.step(d, dummyIntent, ctx)
 
 		local fighters, hits = Combat.resolveHits({ me, d }, ctx)
 		me, d = fighters[1], fighters[2]
@@ -206,6 +215,7 @@ local function onCharacter(character: Model)
 		if d and isOut(d, zone) then
 			playKO(d, zone, false)
 			dummy = newFighter(DUMMY_ID)
+			dummyBot = Bot.new(dummyBot.Seed)
 		end
 
 		-- Draw.

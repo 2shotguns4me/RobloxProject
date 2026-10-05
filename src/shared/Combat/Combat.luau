@@ -74,10 +74,14 @@ function Combat.resolveHits(fighters: { Fighter.State }, ctx: Fighter.Context): 
 		local victim = table.clone(result[p.vi])
 		local move = p.move
 
-		local attack = table.clone(attacker.Attack :: Fighter.Attack)
-		attack.Hit = table.clone(attack.Hit)
-		attack.Hit[victim.Id] = true
-		attacker.Attack = attack
+		-- In a trade the other hit may already have cancelled this attack; the hit still lands.
+		local current = attacker.Attack
+		if current then
+			local attack = table.clone(current)
+			attack.Hit = table.clone(attack.Hit)
+			attack.Hit[victim.Id] = true
+			attacker.Attack = attack
+		end
 
 		victim.Percent += move.Damage
 		local kb = Knockback.compute(

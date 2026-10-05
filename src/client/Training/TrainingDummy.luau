@@ -1,8 +1,8 @@
 --!strict
 --[[
-	The training dummy's look: an orange block the size of a fighter's body, with a damage %
-	label. LocalFighter simulates it like any fighter (it just never presses anything).
-	Client-only: everyone gets their own dummy.
+	The training opponent's look: an orange block the size of a fighter's body, with a damage %
+	label. LocalFighter simulates it like any fighter, driven by the bot or standing still
+	(Training/Config.Opponent). Client-only: everyone gets their own.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

@@ -156,6 +156,27 @@ return function(t)
 		t.eq(a.Hitstop, attackerFrames)
 	end)
 
+	t.test("two attacks that connect on the same frame both land (a trade)", function()
+		local a = settle(Fighter.new(ctx, 1, 0, 1))
+		local v = settle(Fighter.new(ctx, 2, 3, 1))
+		v.Body.Facing = -1
+		a = Fighter.step(a, intent({ AttackPressed = true }), ctx)
+		v = Fighter.step(v, intent({ AttackPressed = true }), ctx)
+		local hits = {}
+		for _ = 1, TestMoveset.Jab.Startup do
+			a = Fighter.step(a, intent(), ctx)
+			v = Fighter.step(v, intent(), ctx)
+			local list, frameHits = Combat.resolveHits({ a, v }, ctx)
+			a, v = list[1], list[2]
+			for _, hit in frameHits do
+				table.insert(hits, hit)
+			end
+		end
+		t.eq(#hits, 2)
+		t.eq(a.Percent, TestMoveset.Jab.Damage)
+		t.eq(v.Percent, TestMoveset.Jab.Damage)
+	end)
+
 	t.test("an attack out of range misses", function()
 		local a, v = pair(10)
 		local hits

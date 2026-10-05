@@ -40,7 +40,7 @@ On your PC, in **VS Code opened on the local folder** (`File → Open Folder…`
    Leave `rojo serve` running.
 2. **Open a local copy of the place** in Studio: a `.rbxl` you saved with **File → Save to File** (gitignored), or a blank Baseplate. Never sync into the shared Team Create place unless you're the one person doing that (see the README's Workflow).
 3. **Connect Rojo while stopped (Edit mode):** **Plugins → Rojo → Connect**. It shows `RobloxProject · localhost:34872`.
-4. **Press Play** (F5). The server builds the grey test stage and you spawn next to the orange training dummy.
+4. **Press Play** (F5). The server builds the grey test stage and you spawn next to the orange bot opponent.
 5. **Check the list below**, and keep **View → Output** open for red errors.
 6. **Finish:** **Stop** (Shift+F5) → **Disconnect** in the Rojo panel → **Ctrl+C** in the `rojo serve` terminal. Don't save `test.rbxl`/your local copy just to keep scripts; Rojo refills them on the next connect.
 
@@ -52,8 +52,9 @@ Controls are in the README's Setup section.
 
 - [ ] **No red errors** in Output from our scripts (`Client`, `Server`, `Shared`).
 - [ ] **Movement:** run, walk (partial stick), full hop vs short hop (tap), double jump, fast-fall (press down after the apex), land on and drop through thin platforms, walls and ceilings stop you.
-- [ ] **Combat:** jab (J), tilt (A/D + J), smash (L), neutral air (J in the air). Each hit raises the dummy's % once, freezes both of you briefly (hitstop), shakes and sparks. A smash at ~95% from mid-stage KOs; the dummy respawns.
-- [ ] **Camera** keeps you and the dummy in frame.
+- [ ] **Combat:** jab (J), tilt (A/D + J), smash (L), neutral air (J in the air). Each hit raises the opponent's % once, freezes both of you briefly (hitstop), shakes and sparks. A smash at ~95% from mid-stage KOs; the opponent respawns.
+- [ ] **Bot:** walks to you, attacks (and its hits raise *your* % and launch you), smashes once you're damaged, double-jumps back when knocked off, and doesn't run off the edge after you. For exact %/KO checks, set `Opponent = "Dummy"` in `src/client/Training/Config.luau` so it stands still.
+- [ ] **Camera** keeps you and the opponent in frame.
 - [ ] **Falling off** the stage KOs you and respawns you.
 - [ ] **Chat:** typing (W, A, S, D, J, L) doesn't move or attack.
 - [ ] **Reset** (Esc → Reset Character): you can still move and attack.
@@ -108,6 +109,7 @@ Give Claude (or a teammate) something it can act on:
   | An attack is too slow/fast or too strong/weak, hitbox too big/small | `src/shared/Combat/TestMoveset.luau` (later each fighter's data file) |
   | Hit freeze, shake, sparks, sound, rumble | `src/shared/Feel/HitTiers.luau`, `src/client/Feel/Config.luau` |
   | Camera too close/far, too slow to follow | `src/client/Camera/Config.luau` |
+  | Bot too easy/hard, too twitchy, smashes too much | `src/shared/Bot/Config.luau` |
   | Touch buttons too small, in the wrong place | `src/client/Input/Config.luau` |
 
 - **Screenshots** help with anything visual. **Screen recordings:** keep them short (5–15 s, one problem each) and say the timestamp; Claude can only look at extracted still frames, so describe anything about timing or feel in words too.
