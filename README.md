@@ -51,7 +51,7 @@ Code finds assets by name, so these must be followed:
 | `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects |
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
-| `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, open questions (marked DECIDE), build order |
+| `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, settled team decisions (marked DECIDED), build order |
 | `docs/characters/` | — | One moveset design per character, written by the team. Copy `_MovesetTemplate.md`; Claude turns each into `src/shared/Characters/<Name>.luau` |
 | `docs/research/` | — | Research behind the scope. `SUMMARY.md` has a one-paragraph abstract of each report: `successful-games.md` (what other fighters did well and badly), `game-feel.md` (hitstop, shake, sound, haptics, VFX), `input-and-netcode.md` (keyboard/controller/mobile controls, online architecture), `roblox-discovery.md` (how Roblox ranks games, launch checklist), `character-ip.md` (which characters are legally safe), `mechanics-design-prompt.md` (prior-art research on Smash mechanics plus a master prompt for writing the full mechanics spec) |
 
@@ -73,7 +73,8 @@ Artists and builders don't need any of this — just open the shared place in St
 
 - **Only one person runs Rojo into the shared Team Create place**, syncing from an up-to-date `main`. Everyone else tests code in their own local copy. Multiple people syncing into the shared place overwrite each other.
 - Edit code in `src/`, never in Studio's script editor — Studio-side edits to synced scripts get overwritten.
-- Avoid code conflicts: one module per system (e.g. `Knockback.luau`, `Hitbox.luau`) with one owner each, and one data file per character.
+- Avoid code conflicts: one folder per system (e.g. `src/shared/Knockback/`, with client- or server-only parts in `src/client/Knockback/` / `src/server/Knockback/`) with one owner each, and one data file per character.
+- Code conventions (in `CLAUDE.md`): every module starts with `--!strict`, tabs for indentation, PascalCase module/folder names. Keep game rules and math in pure modules (no Instances or services) so they can be unit-tested, and put tunable numbers in a `Config` module per system. Timing is in 60 Hz frames and distances in studs, converted to seconds only for effects and UI.
 - **Always work on your own branch — never commit directly to `main`.** Name it after the work (e.g. `knockback-system`, `char-skibidi`), then open a pull request into `main` when it's ready. **Every pull request must be approved by @2shotguns4me, who merges it — don't merge your own.** (GitHub can't enforce this on our plan, so it's on the honor system — but `.github/workflows/main-guard.yml` opens an issue alerting the owner whenever anyone else pushes to or merges into `main`.)
 
   ```bash

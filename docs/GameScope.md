@@ -1,8 +1,8 @@
-# Game Scope (draft v0.1, 2026-10-05)
+# Game Scope (draft v0.2, 2026-10-05)
 
 This is the working scope for the game. It pulls together the research in `docs/research/`, and each
-section links to the report with the evidence and sources. Items marked **DECIDE** are open questions
-for the team. Everything else is a recommendation to adopt unless someone objects.
+section links to the report with the evidence and sources. Items marked **DECIDED** were open
+questions the team has settled. Everything else is a recommendation to adopt unless someone objects.
 
 ## Vision
 
@@ -19,7 +19,8 @@ on a phone and still deep enough to master on a controller.
    controller and touch each get a native layout, not a port ([input-and-netcode](research/input-and-netcode.md)).
 3. **Fighting within 30 seconds.** Bounce in the first 1–3 minutes is a top Roblox ranking signal
    ([roblox-discovery](research/roblox-discovery.md)).
-4. **Fair fights, paid looks.** Every fighter is free to play, and money only buys cosmetics
+4. **Fair fights, paid shortcuts and looks.** Every fighter can be earned by playing. Robux can unlock a
+   fighter sooner or buy cosmetics and crates, but never buys stats or an in-match advantage
    ([successful-games](research/successful-games.md)).
 5. **A roster that keeps growing.** A new fighter, event or mode every 2–4 weeks, each one a reveal moment.
 
@@ -44,9 +45,8 @@ design leaves out gets an archetype default, flagged `-- TODO(design)`.
 - **Jan 1, 2027 drop:** the 1931 film *Frankenstein* and *Dracula* looks, the named Pluto, and Dick
   Tracy enter the US public domain. That's a ready-made reveal event.
 
-**DECIDE:** Do we commit to *original* brainrot-style fighters only? This is the recommendation. The
-alternative is to wait for the lawsuit, or license through Roblox License Manager if a rights holder
-lists the characters.
+**DECIDED:** The team designs its own fighters in Higgsfield and hands them over as moveset designs.
+Claude checks each one against [character-ip](research/character-ip.md) and flags any that is risky to use.
 
 ### Roster structure
 
@@ -74,9 +74,9 @@ shields, ledges, DI, ranking). Scope decisions for our audience:
 | Wavedash | **No** at launch | Frame-perfect tricks don't survive Roblox latency and mobile input |
 | Input buffer | About 9 frames, with jump/shield held across the buffer | Feels responsive, as in Smash Ultimate |
 
-**DECIDE:** 1v1 plus 4-player FFA at launch? 2v2 too?
+**DECIDED:** 1v1 and 4-player FFA at launch. 2v2 comes later as an update.
 
-**DECIDE:** Do items and stage hazards ship at launch, or only as a "Party" ruleset later?
+**DECIDED:** No items or stage hazards at launch. They ship later as a rotating "Party" ruleset.
 
 ## Game feel
 
@@ -115,19 +115,23 @@ See [input-and-netcode](research/input-and-netcode.md) for the full mapping tabl
 ## Modes, retention and monetization
 
 - **Modes at launch:**
-  - casual drop-in (with bots filling empty matches)
+  - casual drop-in 4-player FFA (with bots filling empty slots)
   - 1v1
   - a 60–90 s interactive tutorial that ends in a bot match
   - a bot practice room
 - **Ranked** unlocks after some play.
 - **Retention:** Roblox now measures retention over 28 days. Plan daily quests, weekly events and a
   rotating party mode, plus a collection layer with rarity tiers.
-- **Monetization:** skins, emotes, KO effects and a VIP pass. Possibly a battle pass or subscription.
+- **Monetization (microtransactions):** fighters (instant unlock), skins, emotes, KO effects, loot crates
+  and a VIP pass. Possibly a battle pass or subscription.
+  - Loot crates are paid random items, so Roblox requires showing the odds of every item before purchase.
   Never sell power.
 
-**DECIDE:** The collection/rarity layer. Research says brainrot games grew on collecting things, and
-it also says fighters must be free. The suggested compromise is that *skins and KO effects* are what
-you collect, not the fighters themselves.
+**DECIDED:** The collection layer is fighters plus cosmetics. Every fighter can be earned by playing or
+unlocked instantly with Robux. Skins, emotes and KO effects are collectible with rarity tiers, sold
+directly and in loot crates.
+Still to set: whether crates can also contain fighters, or only cosmetics.
+Still to set: how many fighters new players start with (proposal: enough to pick from in the first match).
 
 ## Visibility and launch
 
