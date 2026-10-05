@@ -34,6 +34,17 @@ generate `src/shared/Characters/<Name>.luau` from `_Template.luau`. Anything the
 default for the character's archetype and a `-- TODO(design)` comment. Check `docs/research/character-ip.md`
 and flag any character that's risky to use.
 
+## Code conventions
+
+- Every module starts with `--!strict`. Tabs for indentation, PascalCase module and folder names.
+- One folder per system: shared logic in `src/shared/<System>/`, client-only code (UI, camera, effects,
+  device input) in `src/client/<System>/`, server-only code in `src/server/<System>/`.
+- Keep game rules and math in pure modules (no Instances or services) so they can be unit-tested
+  outside Studio. Put tunable numbers in a `Config` module per system, not inline.
+- Timing is in 60 Hz simulation frames; distances are studs. Convert to seconds only at the edges
+  (effects, UI).
+- Design references: `docs/GameScope.md` and `docs/research/`.
+
 ## Notes
 
 - Code lives in `src/` and is synced into Studio by Rojo; don't edit synced scripts in Studio's script editor.
