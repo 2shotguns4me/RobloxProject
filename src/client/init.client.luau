@@ -11,7 +11,5 @@ LocalFighter.start()
 -- The Studio feel harness drives the camera itself when it's switched on.
 if Workspace:GetAttribute("FeelHarness") ~= true then
 	FightCamera.Start()
-	LocalFighter.onFocusChanged(function(position)
-		FightCamera.SetTargets(if position then { position } else {})
-	end)
+	LocalFighter.onFocusChanged(FightCamera.SetTargets)
 end
