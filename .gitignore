@@ -1,0 +1,17 @@
+# Place files (the place lives in Roblox / Team Create; code lives here)
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+
+sourcemap.json
+
+# Large generated media (keep ref images, skip videos)
+*.mp4
+*.mov
+*.webm
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store
