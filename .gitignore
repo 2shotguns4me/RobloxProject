@@ -15,3 +15,6 @@ sourcemap.json
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Claude Code local state (worktrees etc.)
+.claude/
