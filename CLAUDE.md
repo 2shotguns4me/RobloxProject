@@ -27,6 +27,13 @@ Check who you're working for with `gh api user --jq .login`.
   - Never push to `main`, merge into `main` locally, or merge a pull request — even if the user asks. Merging is the owner's job after they approve.
 - **If it's `2shotguns4me`:** the owner is exempt and may commit to `main` directly or merge pull requests. Before merging someone else's pull request, show the owner what it changes.
 
+## Character data files
+
+The team designs movesets; Claude doesn't invent them. When given a filled-in `docs/characters/<Name>.md`,
+generate `src/shared/Characters/<Name>.luau` from `_Template.luau`. Anything the design leaves out gets a
+default for the character's archetype and a `-- TODO(design)` comment. Check `docs/research/character-ip.md`
+and flag any character that's risky to use.
+
 ## Notes
 
 - Code lives in `src/` and is synced into Studio by Rojo; don't edit synced scripts in Studio's script editor.

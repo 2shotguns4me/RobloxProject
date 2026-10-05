@@ -51,6 +51,9 @@ Code finds assets by name, so these must be followed:
 | `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Input, camera, UI logic, effects |
 | — | `ReplicatedStorage.Assets` (`Characters`, `Stages`, `VFX`, `Sounds`) | Created by Rojo, filled in Studio. Not stored in git |
 | `ref images/` | — | Reference art for characters/stages (Higgsfield + Roblox generation) |
+| `docs/GameScope.md` | — | **Start here.** The game's scope: vision, pillars, mechanics decisions, open questions (marked DECIDE), build order |
+| `docs/characters/` | — | One moveset design per character, written by the team. Copy `_MovesetTemplate.md`; Claude turns each into `src/shared/Characters/<Name>.luau` |
+| `docs/research/` | — | Research behind the scope: `successful-games.md` (what other fighters did well and badly), `game-feel.md` (hitstop, shake, sound, haptics, VFX), `input-and-netcode.md` (keyboard/controller/mobile controls, online architecture), `roblox-discovery.md` (how Roblox ranks games, launch checklist), `character-ip.md` (which characters are legally safe), `mechanics-design-prompt.md` (prior-art research on Smash mechanics plus a master prompt for writing the full mechanics spec) |
 
 ## Setup (programmers)
 
